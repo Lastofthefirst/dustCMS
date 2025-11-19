@@ -22,7 +22,7 @@ export const uiRoutes = new Elysia()
   .get('/admin/login', ({ set, isAuthenticated }) => {
     if (isAuthenticated) {
       set.redirect = '/admin';
-      return;
+      return '';
     }
 
     const admin = getSuperAdmin();
@@ -61,7 +61,7 @@ export const uiRoutes = new Elysia()
   .get('/admin', ({ set, isAuthenticated }) => {
     if (!isAuthenticated) {
       set.redirect = '/admin/login';
-      return;
+      return '';
     }
 
     const template = loadTemplate('admin/dashboard.html');
@@ -74,7 +74,7 @@ export const uiRoutes = new Elysia()
   .get('/admin/tenants/:slug', ({ params, set, isAuthenticated }) => {
     if (!isAuthenticated) {
       set.redirect = '/admin/login';
-      return;
+      return '';
     }
 
     const tenant = findTenant(params.slug);
@@ -93,7 +93,16 @@ export const uiRoutes = new Elysia()
     type: 'text/html',
   })
 
-  // Root redirect
-  .get('/', ({ set }) => {
+  // Root redirect (only for non-tenant requests)
+  .get('/', ({ set, tenant }) => {
+    // If this is a tenant subdomain, don't handle here - let tenant routes handle it
+    if (tenant) {
+      // This shouldn't normally be reached, but just in case
+      set.redirect = '/login';
+      return '';
+    }
+
+    // No tenant subdomain, redirect to admin
     set.redirect = '/admin/login';
+    return '';
   });
