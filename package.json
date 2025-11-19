@@ -1,0 +1,24 @@
+{
+  "name": "dustcms",
+  "version": "1.0.0",
+  "description": "Multi-tenant CMS with dynamic content modeling",
+  "main": "src/main.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --hot src/main.ts",
+    "build": "./build.sh",
+    "setup": "bun run src/main.ts setup"
+  },
+  "dependencies": {
+    "elysia": "^1.1.0",
+    "@elysiajs/html": "^1.0.0",
+    "@elysiajs/static": "^1.0.0",
+    "@elysiajs/cookie": "^0.8.0",
+    "sharp": "^0.33.0",
+    "better-sqlite3": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "bun-types": "latest"
+  }
+}

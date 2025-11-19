@@ -1,0 +1,86 @@
+<div class="min-h-screen flex items-center justify-center px-4">
+  <div class="card w-full max-w-md bg-base-100 shadow-2xl fade-in">
+    <div class="card-body">
+      <h1 class="card-title text-3xl font-bold mb-2">Super Admin Login</h1>
+      <p class="text-base-content/70 mb-6">Sign in to manage your tenants</p>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold">Email</span>
+          </label>
+          <input
+            type="email"
+            id="email"
+            class="input input-bordered w-full"
+            placeholder="admin@yourdomain.com"
+            required
+          />
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold">Password</span>
+          </label>
+          <input
+            type="password"
+            id="password"
+            class="input input-bordered w-full"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+
+        <div id="error-message" class="alert alert-error hidden">
+          <span id="error-text"></span>
+        </div>
+
+        <button type="submit" id="login-btn" class="btn btn-primary w-full">
+          Sign In
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function handleLogin(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('login-btn');
+
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        window.location.href = '/admin';
+      } else {
+        showError(data.error || 'Invalid credentials');
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    } catch (error) {
+      showError('Network error. Please try again.');
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  }
+
+  function showError(message) {
+    const errorDiv = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    errorText.textContent = message;
+    errorDiv.classList.remove('hidden');
+  }
+</script>

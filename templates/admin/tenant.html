@@ -1,0 +1,349 @@
+<div class="min-h-screen bg-base-200">
+  <!-- Navbar -->
+  <div class="navbar bg-base-100 shadow-lg">
+    <div class="flex-1">
+      <a href="/admin" class="btn btn-ghost gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        Back
+      </a>
+      <span class="text-xl font-bold ml-4">{{TENANT_NAME}}</span>
+    </div>
+    <div class="flex-none gap-2">
+      <div class="badge badge-primary">{{TENANT_SLUG}}</div>
+      <button class="btn btn-ghost" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container mx-auto p-6 max-w-7xl">
+    <!-- Tabs -->
+    <div role="tablist" class="tabs tabs-boxed mb-6">
+      <a role="tab" class="tab tab-active" id="content-tab" onclick="switchTab('content')">Content Management</a>
+      <a role="tab" class="tab" id="models-tab" onclick="switchTab('models')">Content Models</a>
+      <a role="tab" class="tab" id="images-tab" onclick="switchTab('images')">Media Library</a>
+    </div>
+
+    <!-- Content Tab -->
+    <div id="content-panel" class="fade-in">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-3xl font-bold">Content</h2>
+          <p class="text-base-content/70">Manage your content items</p>
+        </div>
+      </div>
+
+      <div id="content-models-list" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <!-- Content models will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Models Tab -->
+    <div id="models-panel" class="hidden">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-3xl font-bold">Content Models</h2>
+          <p class="text-base-content/70">Define your content structure</p>
+        </div>
+        <button class="btn btn-primary gap-2" onclick="showCreateModelModal()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          Create Model
+        </button>
+      </div>
+
+      <div id="models-list" class="space-y-4">
+        <!-- Models will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Images Tab -->
+    <div id="images-panel" class="hidden">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-3xl font-bold">Media Library</h2>
+          <p class="text-base-content/70">Upload and manage images</p>
+        </div>
+        <button class="btn btn-primary gap-2" onclick="document.getElementById('image-upload').click()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+          </svg>
+          Upload Image
+        </button>
+        <input type="file" id="image-upload" class="hidden" accept="image/*" onchange="uploadImage(event)" />
+      </div>
+
+      <div id="images-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Images will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Model Modal -->
+<dialog id="create-model-modal" class="modal">
+  <div class="modal-box max-w-2xl">
+    <h3 class="font-bold text-lg mb-4">Create Content Model</h3>
+    <form id="create-model-form" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label"><span class="label-text font-semibold">Model Slug</span></label>
+          <input type="text" id="model-slug" class="input input-bordered" placeholder="events" pattern="[a-z0-9_]+" required />
+        </div>
+        <div class="form-control">
+          <label class="label"><span class="label-text font-semibold">Model Name</span></label>
+          <input type="text" id="model-name" class="input input-bordered" placeholder="Events" required />
+        </div>
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-semibold">Type</span></label>
+        <select id="model-type" class="select select-bordered">
+          <option value="collection">Collection (Multiple Items)</option>
+          <option value="singleton">Singleton (Single Item)</option>
+        </select>
+      </div>
+
+      <div class="divider">Fields</div>
+      <div id="fields-list" class="space-y-2"></div>
+      <button type="button" class="btn btn-sm btn-outline" onclick="addField()">+ Add Field</button>
+
+      <div class="modal-action">
+        <button type="button" class="btn" onclick="closeCreateModelModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Model</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Edit Content Modal -->
+<dialog id="edit-content-modal" class="modal">
+  <div class="modal-box max-w-2xl">
+    <h3 class="font-bold text-lg mb-4" id="edit-content-title">Edit Content</h3>
+    <form id="edit-content-form" class="space-y-4">
+      <div id="content-fields"></div>
+      <div class="modal-action">
+        <button type="button" class="btn" onclick="closeEditContentModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<script>
+  const TENANT_SLUG = '{{TENANT_SLUG}}';
+  let currentTab = 'content';
+  let models = [];
+  let images = [];
+  let fieldCounter = 0;
+  let currentModel = null;
+  let currentItem = null;
+
+  async function loadModels() {
+    const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/models`);
+    const data = await response.json();
+    models = data.models || [];
+    renderContentModels();
+    renderModels();
+  }
+
+  async function loadImages() {
+    const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/images`);
+    const data = await response.json();
+    images = data.images || [];
+    renderImages();
+  }
+
+  function renderContentModels() {
+    const list = document.getElementById('content-models-list');
+    if (models.length === 0) {
+      list.innerHTML = '<div class="col-span-full text-center py-12 text-base-content/50">No content models yet. Create one in the Models tab!</div>';
+      return;
+    }
+    list.innerHTML = models.map(model => `
+      <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer" onclick="openContentEditor('${model.slug}')">
+        <div class="card-body">
+          <h3 class="card-title">${escapeHtml(model.name)}</h3>
+          <p class="text-sm text-base-content/70">${model.type === 'collection' ? 'Collection' : 'Singleton'}</p>
+          <div class="badge badge-outline mt-2">${model.fields.length} fields</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderModels() {
+    const list = document.getElementById('models-list');
+    if (models.length === 0) {
+      list.innerHTML = '<div class="text-center py-12 text-base-content/50">No content models yet. Create your first one!</div>';
+      return;
+    }
+    list.innerHTML = models.map(model => `
+      <div class="card bg-base-100 shadow-lg">
+        <div class="card-body">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="card-title">${escapeHtml(model.name)}</h3>
+              <p class="text-sm text-base-content/70 font-mono">${escapeHtml(model.slug)}</p>
+              <div class="mt-2"><span class="badge">${model.type}</span></div>
+              <div class="mt-3 space-y-1">
+                ${model.fields.map(f => `<div class="text-sm"><span class="badge badge-sm badge-ghost">${f.type}</span> ${escapeHtml(f.name)}</div>`).join('')}
+              </div>
+            </div>
+            <button class="btn btn-error btn-sm btn-outline" onclick="deleteModel('${model.slug}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderImages() {
+    const grid = document.getElementById('images-grid');
+    if (images.length === 0) {
+      grid.innerHTML = '<div class="col-span-full text-center py-12 text-base-content/50">No images uploaded yet</div>';
+      return;
+    }
+    grid.innerHTML = images.map(img => `
+      <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+        <figure class="aspect-square bg-base-200">
+          <img src="/images/${img}" alt="${img}" class="w-full h-full object-cover" />
+        </figure>
+        <div class="card-body p-2">
+          <button class="btn btn-xs btn-block" onclick="copyImageUrl('${img}')">Copy URL</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    ['content', 'models', 'images'].forEach(t => {
+      document.getElementById(`${t}-tab`).classList.toggle('tab-active', t === tab);
+      document.getElementById(`${t}-panel`).classList.toggle('hidden', t !== tab);
+    });
+    if (tab === 'images') loadImages();
+  }
+
+  function showCreateModelModal() {
+    document.getElementById('fields-list').innerHTML = '';
+    fieldCounter = 0;
+    addField();
+    document.getElementById('create-model-modal').showModal();
+  }
+
+  function closeCreateModelModal() {
+    document.getElementById('create-model-modal').close();
+    document.getElementById('create-model-form').reset();
+  }
+
+  function addField() {
+    const id = fieldCounter++;
+    const container = document.getElementById('fields-list');
+    const div = document.createElement('div');
+    div.className = 'grid grid-cols-3 gap-2';
+    div.innerHTML = `
+      <input type="text" class="input input-sm input-bordered" placeholder="Field name" data-field-name="${id}" required />
+      <select class="select select-sm select-bordered" data-field-type="${id}">
+        <option value="text">Text</option>
+        <option value="textarea">Textarea</option>
+        <option value="markdown">Markdown</option>
+        <option value="image">Image</option>
+        <option value="date">Date</option>
+        <option value="link">Link</option>
+      </select>
+      <label class="label cursor-pointer justify-start gap-2">
+        <input type="checkbox" class="checkbox checkbox-sm" data-field-required="${id}" />
+        <span class="label-text text-xs">Required</span>
+      </label>
+    `;
+    container.appendChild(div);
+  }
+
+  document.getElementById('create-model-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const slug = document.getElementById('model-slug').value.trim();
+    const name = document.getElementById('model-name').value.trim();
+    const type = document.getElementById('model-type').value;
+    const fields = [];
+
+    for (let i = 0; i < fieldCounter; i++) {
+      const nameInput = document.querySelector(`[data-field-name="${i}"]`);
+      const typeSelect = document.querySelector(`[data-field-type="${i}"]`);
+      const requiredCheckbox = document.querySelector(`[data-field-required="${i}"]`);
+
+      if (nameInput && nameInput.value) {
+        fields.push({
+          name: nameInput.value.trim(),
+          type: typeSelect.value,
+          required: requiredCheckbox.checked
+        });
+      }
+    }
+
+    const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/models`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug, name, type, fields })
+    });
+
+    if (response.ok) {
+      closeCreateModelModal();
+      loadModels();
+    }
+  });
+
+  async function deleteModel(slug) {
+    if (!confirm(`Delete model "${slug}"? This will delete all content.`)) return;
+    await fetch(`/api/admin/tenants/${TENANT_SLUG}/models/${slug}`, { method: 'DELETE' });
+    loadModels();
+  }
+
+  async function openContentEditor(modelSlug) {
+    currentModel = models.find(m => m.slug === modelSlug);
+    if (!currentModel) return;
+
+    const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${modelSlug}`);
+    const data = await response.json();
+    const items = data.items || [];
+
+    // For now, just show an alert - in a full implementation, this would show a content editor
+    alert(`Content editor for ${currentModel.name}. You have ${items.length} items. Full editor coming soon!`);
+  }
+
+  async function uploadImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/images`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (response.ok) {
+      loadImages();
+    }
+    event.target.value = '';
+  }
+
+  function copyImageUrl(filename) {
+    navigator.clipboard.writeText(`/images/${filename}`);
+    alert('Image URL copied!');
+  }
+
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/admin/login';
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  loadModels();
+</script>
