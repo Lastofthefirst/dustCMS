@@ -118,18 +118,40 @@
   </div>
 </dialog>
 
+<!-- Content List Modal -->
+<dialog id="content-list-modal" class="modal">
+  <div class="modal-box max-w-5xl max-h-[90vh]">
+    <h3 class="font-bold text-2xl mb-4" id="content-list-title"></h3>
+    <div class="flex justify-between items-center mb-4">
+      <p class="text-base-content/70" id="content-list-subtitle"></p>
+      <button class="btn btn-primary btn-sm gap-2" onclick="createNewContent()" id="create-content-btn">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Add Item
+      </button>
+    </div>
+    <div id="content-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
+    <div class="modal-action">
+      <button class="btn" onclick="closeContentListModal()">Close</button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
 <!-- Edit Content Modal -->
 <dialog id="edit-content-modal" class="modal">
-  <div class="modal-box max-w-2xl">
+  <div class="modal-box max-w-2xl max-h-[90vh] overflow-y-auto">
     <h3 class="font-bold text-lg mb-4" id="edit-content-title">Edit Content</h3>
     <form id="edit-content-form" class="space-y-4">
-      <div id="content-fields"></div>
+      <div id="content-fields" class="space-y-4"></div>
       <div class="modal-action">
         <button type="button" class="btn" onclick="closeEditContentModal()">Cancel</button>
         <button type="submit" class="btn btn-primary">Save</button>
       </div>
     </form>
   </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
 </dialog>
 
 <script>
@@ -163,7 +185,7 @@
       return;
     }
     list.innerHTML = models.map(model => `
-      <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"><div class="card-body"><h3 class="card-title">${escapeHtml(model.name)}</h3><p class="text-sm text-base-content/70">${model.type === 'collection' ? 'Collection' : 'Singleton'}</p><div class="flex gap-2 mt-4"><button class="btn btn-sm btn-primary flex-1" onclick="event.stopPropagation(); openContentEditor('${model.slug}')">
+      <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer" onclick="openContentEditor('${model.slug}')">
         <div class="card-body">
           <h3 class="card-title">${escapeHtml(model.name)}</h3>
           <p class="text-sm text-base-content/70">${model.type === 'collection' ? 'Collection' : 'Singleton'}</p>
@@ -251,6 +273,7 @@
         <option value="image">Image</option>
         <option value="date">Date</option>
         <option value="link">Link</option>
+        <option value="badges">Badges (Tags)</option>
       </select>
       <label class="label cursor-pointer justify-start gap-2">
         <input type="checkbox" class="checkbox checkbox-sm" data-field-required="${id}" />
@@ -303,12 +326,245 @@
     currentModel = models.find(m => m.slug === modelSlug);
     if (!currentModel) return;
 
-    const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${modelSlug}`);
-    const data = await response.json();
-    const items = data.items || [];
+    document.getElementById('content-list-title').textContent = currentModel.name;
+    document.getElementById('content-list-subtitle').textContent = currentModel.type === 'singleton' ? 'Single item' : 'Multiple items';
+    document.getElementById('create-content-btn').style.display = currentModel.type === 'singleton' ? 'none' : 'block';
 
-    // For now, just show an alert - in a full implementation, this would show a content editor
-    alert(`Content editor for ${currentModel.name}. You have ${items.length} items. Full editor coming soon!`);
+    await loadContentItems();
+    document.getElementById('content-list-modal').showModal();
+  }
+
+  async function loadContentItems() {
+    const endpoint = currentModel.type === 'singleton'
+      ? `/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/singleton`
+      : `/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}`;
+
+    const response = await fetch(endpoint);
+    const data = await response.json();
+
+    if (currentModel.type === 'singleton') {
+      renderSingletonContent(data.item);
+    } else {
+      renderContentList(data.items || []);
+    }
+  }
+
+  function renderContentList(items) {
+    const list = document.getElementById('content-list');
+    if (items.length === 0) {
+      list.innerHTML = '<div class="text-center py-12 text-base-content/50">No content yet. Create your first item!</div>';
+      return;
+    }
+
+    list.innerHTML = items.map(item => {
+      const preview = currentModel.fields.slice(0, 2).map(f => {
+        const value = item[f.name];
+        if (!value) return '';
+        if (f.type === 'image') return `<img src="${value}" class="w-12 h-12 object-cover rounded" />`;
+        if (f.type === 'badges') return `<div class="flex gap-1">${value.split(',').slice(0, 3).map(b => `<span class="badge badge-sm">${escapeHtml(b.trim())}</span>`).join('')}</div>`;
+        return `<span class="text-sm">${escapeHtml(String(value).substring(0, 50))}</span>`;
+      }).join(' ');
+
+      return `
+        <div class="card bg-base-200 hover:bg-base-300 transition-colors">
+          <div class="card-body p-4 flex flex-row items-center justify-between">
+            <div class="flex gap-4 items-center flex-1">
+              ${preview}
+            </div>
+            <div class="flex gap-2">
+              <button class="btn btn-sm btn-ghost" onclick="editContent(${item.id})">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </button>
+              <button class="btn btn-sm btn-error btn-ghost" onclick="deleteContent(${item.id})">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderSingletonContent(item) {
+    const list = document.getElementById('content-list');
+    const hasContent = item && Object.keys(item).length > 1; // More than just ID
+
+    list.innerHTML = `
+      <div class="text-center py-8">
+        <button class="btn btn-primary btn-lg" onclick="editContent(null)">
+          ${hasContent ? 'Edit Content' : 'Add Content'}
+        </button>
+      </div>
+    `;
+  }
+
+  function createNewContent() {
+    currentItem = null;
+    showEditContentModal();
+  }
+
+  async function editContent(itemId) {
+    if (currentModel.type === 'singleton') {
+      const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/singleton`);
+      const data = await response.json();
+      currentItem = data.item || {};
+    } else if (itemId) {
+      const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/${itemId}`);
+      const data = await response.json();
+      currentItem = data.item;
+    } else {
+      currentItem = {};
+    }
+
+    showEditContentModal();
+  }
+
+  function showEditContentModal() {
+    const isNew = !currentItem || !currentItem.id;
+    document.getElementById('edit-content-title').textContent =
+      isNew ? `Add ${currentModel.name}` : `Edit ${currentModel.name}`;
+
+    const fieldsContainer = document.getElementById('content-fields');
+    fieldsContainer.innerHTML = currentModel.fields.map(field => {
+      const value = currentItem[field.name] || '';
+      return generateFieldInput(field, value);
+    }).join('');
+
+    document.getElementById('edit-content-modal').showModal();
+  }
+
+  function generateFieldInput(field, value) {
+    const required = field.required ? 'required' : '';
+    const label = field.label || field.name;
+
+    switch (field.type) {
+      case 'text':
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <input type="text" name="${field.name}" class="input input-bordered" value="${escapeHtml(value)}" ${required} />
+          </div>
+        `;
+      case 'textarea':
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <textarea name="${field.name}" class="textarea textarea-bordered h-24" ${required}>${escapeHtml(value)}</textarea>
+          </div>
+        `;
+      case 'markdown':
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <textarea name="${field.name}" class="textarea textarea-bordered font-mono h-48" ${required}>${escapeHtml(value)}</textarea>
+            <label class="label"><span class="label-text-alt">Supports Markdown formatting</span></label>
+          </div>
+        `;
+      case 'image':
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <input type="text" name="${field.name}" class="input input-bordered" value="${escapeHtml(value)}" placeholder="/images/filename.webp" ${required} />
+            <label class="label"><span class="label-text-alt">Upload images in the Media Library tab</span></label>
+          </div>
+        `;
+      case 'date':
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <input type="date" name="${field.name}" class="input input-bordered" value="${value}" ${required} />
+          </div>
+        `;
+      case 'link':
+        const linkData = value ? (typeof value === 'string' ? JSON.parse(value) : value) : {url: '', text: ''};
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <input type="url" name="${field.name}_url" class="input input-bordered mb-2" placeholder="https://example.com" value="${escapeHtml(linkData.url || '')}" ${required} />
+            <input type="text" name="${field.name}_text" class="input input-bordered" placeholder="Link text (optional)" value="${escapeHtml(linkData.text || '')}" />
+          </div>
+        `;
+      case 'badges':
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <input type="text" name="${field.name}" class="input input-bordered" value="${escapeHtml(value)}" placeholder="tag1, tag2, tag3" ${required} />
+            <label class="label"><span class="label-text-alt">Comma-separated tags</span></label>
+          </div>
+        `;
+      default:
+        return '';
+    }
+  }
+
+  document.getElementById('edit-content-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {};
+
+    currentModel.fields.forEach(field => {
+      if (field.type === 'link') {
+        const url = formData.get(`${field.name}_url`);
+        const text = formData.get(`${field.name}_text`);
+        data[field.name] = JSON.stringify({ url, text });
+      } else {
+        data[field.name] = formData.get(field.name);
+      }
+    });
+
+    try {
+      let response;
+      if (currentModel.type === 'singleton') {
+        response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } else if (currentItem && currentItem.id) {
+        response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/${currentItem.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } else {
+        response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      }
+
+      if (response.ok) {
+        closeEditContentModal();
+        await loadContentItems();
+      }
+    } catch (error) {
+      alert('Failed to save content');
+    }
+  });
+
+  async function deleteContent(itemId) {
+    if (!confirm('Delete this item?')) return;
+
+    const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/${itemId}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      await loadContentItems();
+    }
+  }
+
+  function closeContentListModal() {
+    document.getElementById('content-list-modal').close();
+  }
+
+  function closeEditContentModal() {
+    document.getElementById('edit-content-modal').close();
   }
 
   async function uploadImage(event) {
