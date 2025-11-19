@@ -6,6 +6,7 @@ import { config } from './config';
 import { startServer } from './server';
 import { getSuperAdmin, createSuperAdmin, updateSuperAdmin } from './db/system';
 import { hashPassword } from './services/auth';
+import { saveDeploymentFiles, generateDeploymentInstructions, type DeploymentConfig } from './services/deployment';
 
 async function ensureDataDirectory() {
   if (!existsSync(config.dataDir)) {
@@ -85,12 +86,45 @@ async function runSetupWizard() {
   console.log(`✓ Super admin: ${username}`);
   console.log(`✓ Base domain: ${baseDomain}`);
 
-  if (!isUpdate) {
+  // Production deployment configuration
+  console.log('\n');
+  const generateDeployment = prompt('Generate production deployment files? (y/n):', { default: 'y' });
+
+  if (generateDeployment?.toLowerCase() === 'y') {
+    console.log('\n📦 Production Deployment Configuration\n');
+
+    // Get deployment configuration
+    const email = prompt('Email for SSL certificates (Let\'s Encrypt):', { default: 'admin@' + baseDomain });
+    if (!email) {
+      console.error('❌ Email is required for SSL certificates');
+      process.exit(1);
+    }
+
+    const port = prompt('Internal port (Caddy will handle 80/443):', { default: '3000' });
+    const deployUser = prompt('System user to run the service:', { default: 'dustcms' });
+    const workingDir = prompt('Installation directory:', { default: '/opt/dustcms' });
+    const dataDir = prompt('Data directory (absolute path):', { default: '/var/lib/dustcms/data' });
+
+    const deploymentConfig: DeploymentConfig = {
+      domain: baseDomain,
+      email: email!,
+      port: parseInt(port || '3000', 10),
+      dataDir: dataDir || '/var/lib/dustcms/data',
+      workingDir: workingDir || '/opt/dustcms',
+      user: deployUser || 'dustcms',
+    };
+
+    // Save deployment files
+    saveDeploymentFiles(deploymentConfig);
+
+    // Display deployment instructions
+    console.log(generateDeploymentInstructions(deploymentConfig));
+  } else if (!isUpdate) {
     console.log(`\n📝 Next steps:`);
     console.log(`   1. Start server: bun run src/main.ts`);
     console.log(`   2. Login at: http://localhost:${config.port}/admin/login`);
     console.log(`   3. Create your first tenant`);
-    console.log(`\n💡 For production: ./build.sh to create standalone binary`);
+    console.log(`\n💡 For production: Run setup again and choose 'y' for deployment files`);
   } else {
     console.log(`\n📝 You can now login with your new credentials!`);
   }

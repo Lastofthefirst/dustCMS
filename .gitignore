@@ -11,6 +11,9 @@ static/css/output.css
 # Data (exclude all tenant data and databases)
 data/
 
+# Deployment (environment-specific configuration)
+deployment/
+
 # Environment
 .env
 .env.local
