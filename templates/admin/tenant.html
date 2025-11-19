@@ -304,8 +304,19 @@
     document.getElementById('create-model-form').reset();
   }
 
-  function showImportModelModal() {
+  async function showImportModelModal() {
     document.getElementById('import-model-modal').showModal();
+
+    // Try to read from clipboard automatically
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      if (clipboardText && clipboardText.trim()) {
+        document.getElementById('import-json').value = clipboardText;
+      }
+    } catch (error) {
+      // Clipboard access denied or not available, user can paste manually
+      console.log('Clipboard access not available, user can paste manually');
+    }
   }
 
   function closeImportModelModal() {
@@ -599,7 +610,7 @@ Now, describe the content model you need:`;
   }
 
   function createNewContent() {
-    currentItem = null;
+    currentItem = {};
     showEditContentModal();
   }
 

@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { listTenants, findTenant, createTenant, updateTenant, deleteTenant } from '../../services/tenant';
 import { generatePassphrase } from '../../services/password';
+import { hashPassword } from '../../services/auth';
 
 export const tenantRoutes = new Elysia({ prefix: '/api/admin/tenants' })
   .get('/', () => {
@@ -59,6 +60,30 @@ export const tenantRoutes = new Elysia({ prefix: '/api/admin/tenants' })
       return { success: true };
     } catch (error: any) {
       set.status = 400;
+      return { error: error.message };
+    }
+  })
+  .post('/:slug/regenerate-password', async ({ params, set }) => {
+    try {
+      const tenant = findTenant(params.slug);
+      if (!tenant) {
+        set.status = 404;
+        return { error: 'Tenant not found' };
+      }
+
+      // Generate new password
+      const newPassword = generatePassphrase(4);
+
+      // Hash and update tenant password
+      const passwordHash = await hashPassword(newPassword);
+      updateTenant(params.slug, { password: passwordHash });
+
+      return {
+        success: true,
+        password: newPassword
+      };
+    } catch (error: any) {
+      set.status = 500;
       return { error: error.message };
     }
   });
