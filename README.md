@@ -21,7 +21,7 @@ A multi-tenant headless CMS with dynamic content modeling. Build custom content 
 
 ```bash
 # Clone the repository
-git clone git@github.com/lastofthefirst/dustCMS.git
+git clone git@github.com:Lastofthefirst/dustCMS.git
 cd dustCMS
 
 # Install dependencies
