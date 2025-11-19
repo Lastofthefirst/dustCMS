@@ -263,24 +263,45 @@
     const id = fieldCounter++;
     const container = document.getElementById('fields-list');
     const div = document.createElement('div');
-    div.className = 'grid grid-cols-3 gap-2';
+    div.className = 'space-y-2 p-3 bg-base-200 rounded-lg';
     div.innerHTML = `
-      <input type="text" class="input input-sm input-bordered" placeholder="Field name" data-field-name="${id}" required />
-      <select class="select select-sm select-bordered" data-field-type="${id}">
-        <option value="text">Text</option>
-        <option value="textarea">Textarea</option>
-        <option value="markdown">Markdown</option>
-        <option value="image">Image</option>
-        <option value="date">Date</option>
-        <option value="link">Link</option>
-        <option value="badges">Badges (Tags)</option>
-      </select>
-      <label class="label cursor-pointer justify-start gap-2">
-        <input type="checkbox" class="checkbox checkbox-sm" data-field-required="${id}" />
-        <span class="label-text text-xs">Required</span>
-      </label>
+      <div class="grid grid-cols-3 gap-2">
+        <input type="text" class="input input-sm input-bordered" placeholder="Field name" data-field-name="${id}" required />
+        <select class="select select-sm select-bordered" data-field-type="${id}" onchange="toggleCharLimit(${id})">
+          <option value="text">Text</option>
+          <option value="textarea">Textarea</option>
+          <option value="markdown">Markdown</option>
+          <option value="image">Image</option>
+          <option value="date">Date</option>
+          <option value="link">Link</option>
+          <option value="badges">Badges (Tags)</option>
+        </select>
+        <label class="label cursor-pointer justify-start gap-2">
+          <input type="checkbox" class="checkbox checkbox-sm" data-field-required="${id}" />
+          <span class="label-text text-xs">Required</span>
+        </label>
+      </div>
+      <div class="hidden" data-char-limit-container="${id}">
+        <label class="label py-1">
+          <span class="label-text text-xs">Character Limit (optional)</span>
+        </label>
+        <input type="number" class="input input-sm input-bordered w-full" placeholder="e.g., 100" min="1" data-field-maxlength="${id}" />
+      </div>
     `;
     container.appendChild(div);
+  }
+
+  function toggleCharLimit(fieldId) {
+    const typeSelect = document.querySelector(`[data-field-type="${fieldId}"]`);
+    const charLimitContainer = document.querySelector(`[data-char-limit-container="${fieldId}"]`);
+    const fieldType = typeSelect.value;
+
+    // Show character limit input for text and textarea fields
+    if (fieldType === 'text' || fieldType === 'textarea') {
+      charLimitContainer.classList.remove('hidden');
+    } else {
+      charLimitContainer.classList.add('hidden');
+    }
   }
 
   document.getElementById('create-model-form').addEventListener('submit', async (e) => {
@@ -294,13 +315,21 @@
       const nameInput = document.querySelector(`[data-field-name="${i}"]`);
       const typeSelect = document.querySelector(`[data-field-type="${i}"]`);
       const requiredCheckbox = document.querySelector(`[data-field-required="${i}"]`);
+      const maxLengthInput = document.querySelector(`[data-field-maxlength="${i}"]`);
 
       if (nameInput && nameInput.value) {
-        fields.push({
+        const field = {
           name: nameInput.value.trim(),
           type: typeSelect.value,
           required: requiredCheckbox.checked
-        });
+        };
+
+        // Add maxLength if specified for text/textarea fields
+        if (maxLengthInput && maxLengthInput.value && (typeSelect.value === 'text' || typeSelect.value === 'textarea')) {
+          field.maxLength = parseInt(maxLengthInput.value, 10);
+        }
+
+        fields.push(field);
       }
     }
 
@@ -443,17 +472,34 @@
 
     switch (field.type) {
       case 'text':
+        const maxLengthAttr = field.maxLength ? `maxlength="${field.maxLength}"` : '';
+        const charCountId = `char-count-${field.name}`;
+        const currentLength = value ? String(value).length : 0;
+        const showCounter = field.maxLength ? '' : 'hidden';
         return `
           <div class="form-control">
-            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
-            <input type="text" name="${field.name}" class="input input-bordered" value="${escapeHtml(value)}" ${required} />
+            <label class="label">
+              <span class="label-text font-semibold">${escapeHtml(label)}</span>
+              <span class="label-text-alt ${showCounter}" id="${charCountId}">${currentLength}${field.maxLength ? `/${field.maxLength}` : ''}</span>
+            </label>
+            <input type="text" name="${field.name}" class="input input-bordered" value="${escapeHtml(value)}"
+              ${required} ${maxLengthAttr}
+              oninput="updateCharCount('${field.name}', ${field.maxLength || 0})" />
           </div>
         `;
       case 'textarea':
+        const textareaMaxLengthAttr = field.maxLength ? `maxlength="${field.maxLength}"` : '';
+        const textareaCharCountId = `char-count-${field.name}`;
+        const textareaCurrentLength = value ? String(value).length : 0;
+        const textareaShowCounter = field.maxLength ? '' : 'hidden';
         return `
           <div class="form-control">
-            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
-            <textarea name="${field.name}" class="textarea textarea-bordered h-24" ${required}>${escapeHtml(value)}</textarea>
+            <label class="label">
+              <span class="label-text font-semibold">${escapeHtml(label)}</span>
+              <span class="label-text-alt ${textareaShowCounter}" id="${textareaCharCountId}">${textareaCurrentLength}${field.maxLength ? `/${field.maxLength}` : ''}</span>
+            </label>
+            <textarea name="${field.name}" class="textarea textarea-bordered h-24" ${required} ${textareaMaxLengthAttr}
+              oninput="updateCharCount('${field.name}', ${field.maxLength || 0})">${escapeHtml(value)}</textarea>
           </div>
         `;
       case 'markdown':
@@ -588,6 +634,22 @@
   function copyImageUrl(filename) {
     navigator.clipboard.writeText(`/images/${filename}`);
     alert('Image URL copied!');
+  }
+
+  function updateCharCount(fieldName, maxLength) {
+    const input = document.querySelector(`[name="${fieldName}"]`);
+    const counter = document.getElementById(`char-count-${fieldName}`);
+    if (input && counter && maxLength > 0) {
+      const currentLength = input.value.length;
+      counter.textContent = `${currentLength}/${maxLength}`;
+
+      // Add warning color if approaching limit
+      if (currentLength >= maxLength * 0.9) {
+        counter.classList.add('text-warning');
+      } else {
+        counter.classList.remove('text-warning');
+      }
+    }
   }
 
   async function logout() {
