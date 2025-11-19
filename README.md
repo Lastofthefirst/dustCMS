@@ -9,7 +9,7 @@
 | **DB** | **SQLite per tenant** | One file per tenant; backup = `cp` |
 | **Images** | **Sharp** | `sharp().resize(800).webp()` - one line, always works |
 | **Admin UI** | **HTMX + DaisyUI** | Vendored CSS; LLM writes HTML that works first time |
-| **Auth** | **Single super-admin** | No email; password stored plaintext (admin owns everything) |
+| **Auth** | **Single super-admin** | Password-only (no email); bcrypt hashed in system.db |
 | **Deployment** | **Single binary** | `./build.sh` → `cms-server`; scp and run |
 
 ---
@@ -42,6 +42,57 @@ Serve JSON to static site
 
 ---
 
+## **User Stories**
+
+### **Super-Admin (Agency/Developer)**
+
+**Setup & Configuration:**
+- As a super-admin, I want to set up the CMS with a single password (no email required), so I can quickly get started without email configuration.
+- As a super-admin, I want to reset my password via the setup wizard, so I can regain access if I forget my credentials.
+- As a super-admin, I want to configure the base domain once during setup, so all tenants automatically get subdomains with SSL.
+
+**Tenant Management:**
+- As a super-admin, I want to create a new tenant with a slug and name, so each client gets their own isolated CMS instance.
+- As a super-admin, I want to see all tenants in a dashboard, so I can manage multiple client sites from one place.
+- As a super-admin, I want to define custom content models for each tenant, so each client can have content structures specific to their needs.
+
+**Content Modeling:**
+- As a super-admin, I want to create Collection models (e.g., "events", "team members"), so tenants can manage lists of repeating content.
+- As a super-admin, I want to create Singleton models (e.g., "site banner", "contact info"), so tenants can manage one-off content pages.
+- As a super-admin, I want to add fields (text, markdown, image, date, link) to models, so content structures match client requirements.
+- As a super-admin, I want to edit or delete content models, so I can adapt to changing client needs.
+
+**Multi-Tenant Access:**
+- As a super-admin, I want a single session cookie to work across all tenant subdomains, so I don't need to log in separately for each client.
+- As a super-admin, I want to switch between tenants without re-authenticating, so I can efficiently manage multiple clients.
+
+### **Tenant/Client (Content Editor)**
+
+**Content Management:**
+- As a tenant user, I want to see a dynamically generated admin UI based on my content models, so I can manage content without technical knowledge.
+- As a tenant user, I want to add, edit, and delete items in Collections (e.g., blog posts, events), so I can keep my site content up to date.
+- As a tenant user, I want to edit Singleton content (e.g., homepage banner), so I can update static page content.
+- As a tenant user, I want to write content in Markdown with a live editor, so I can format rich text content easily.
+
+**Media Management:**
+- As a tenant user, I want to upload images that are automatically optimized to WebP, so my site loads fast without manual image processing.
+- As a tenant user, I want to see all uploaded images in a media library, so I can reuse images across different content items.
+- As a tenant user, I want to copy image URLs, so I can reference them in content fields or external sites.
+
+**API Integration:**
+- As a tenant user, I want my content automatically available via a JSON API, so my static site can fetch and display it.
+- As a tenant user, I want the API to be read-only for the public, so my content is secure while still being accessible to my website.
+
+### **Static Site Developer**
+
+**API Consumption:**
+- As a developer, I want to fetch content from a predictable API endpoint (`/api/content/:model`), so I can build static sites with dynamic content.
+- As a developer, I want JSON responses with clean data structures, so I can easily map content to HTML templates.
+- As a developer, I want optimized images served as WebP, so my site has fast load times.
+- As a developer, I want CORS-enabled endpoints, so I can fetch content from any static site host.
+
+---
+
 ## **Auth (Simplified)**
 
 **Single super-admin account** stored in `system.db`:
@@ -56,16 +107,18 @@ CREATE TABLE tenants (
 );
 
 CREATE TABLE super_admin (
-  email TEXT PRIMARY KEY,
-  password_hash TEXT              -- bcrypt hash only for super-admin
+  id INTEGER PRIMARY KEY,
+  password_hash TEXT,             -- bcrypt hash
+  created_at INTEGER
 );
 ```
 
 **Login Flow**:
-- Super-admin logs in at `cms.mainbizsite.org/admin/login`
+- Super-admin logs in at `cms.mainbizsite.org/admin/login` with password only (no email/username)
 - Cookie `session=super:${token}` set on `.cms.mainbizsite.org` domain
 - This cookie grants access to **all** tenant subdomains and administrative functions.
 - Tenants are created and managed within the super-admin UI.
+- Password can be reset via the setup wizard if needed.
 
 **Session Middleware**:
 ```typescript
@@ -225,11 +278,13 @@ return { url: `/images/${filename}` };
 
 ## **Setup Wizard (Server Installation)**
 
-The setup wizard is an opinionated, one-time script to get the server running. It configures the essential system-level settings. **It does not create tenants.** Tenants are created by the super-admin via the web UI after setup is complete.
+The setup wizard configures essential system-level settings. It can be run for initial setup or to reset the super-admin password. **It does not create tenants.** Tenants are created by the super-admin via the web UI after setup is complete.
 
 ```bash
 $ ./cms-server setup
 ```
+
+**Initial Setup Flow:**
 
 **Step 1: Base Domain**
 ```
@@ -244,7 +299,35 @@ $ ./cms-server setup
 > Create a super-admin password (min 12 chars):
   ************
 
-✓ Hash stored in data/system.db
+> Confirm password:
+  ************
+
+✓ Password hash stored in data/system.db
+```
+
+**Password Reset Flow:**
+
+If `data/system.db` already exists, the wizard detects this and offers password reset:
+
+```bash
+$ ./cms-server setup
+
+⚠ Existing installation detected.
+
+? What would you like to do?
+  > Reset super-admin password
+    Reconfigure base domain
+    Cancel
+
+> Reset super-admin password
+
+> Enter new super-admin password (min 12 chars):
+  ************
+
+> Confirm password:
+  ************
+
+✓ Password updated successfully.
 ```
 
 The server binary will have Caddy integrated for fully automated reverse proxying and SSL certificate management (via Let's Encrypt) for the base domain and all tenant subdomains. This provides a zero-config HTTPS setup.
