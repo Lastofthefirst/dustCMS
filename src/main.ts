@@ -29,34 +29,53 @@ async function runSetupWizard() {
   if (admin) {
     console.log('✓ Setup already completed!');
     console.log(`✓ Super admin: ${admin.email}`);
+    console.log(`✓ Base domain: ${config.baseDomain}`);
     console.log('\nRun without "setup" argument to start the server.');
     process.exit(0);
   }
 
-  console.log('Setting up dustCMS...\n');
+  console.log('Setting up dustCMS for production...\n');
+
+  // Prompt for base domain
+  console.log('Base domain (e.g., cms.example.com):');
+  console.log('Tenants will be accessed at: tenant-slug.<domain>');
+  const baseDomain = prompt('Domain:', { default: config.baseDomain });
+  if (!baseDomain) {
+    console.error('❌ Base domain is required');
+    process.exit(1);
+  }
+  config.baseDomain = baseDomain;
+
+  console.log('');
 
   // Prompt for email
   const email = prompt('Super admin email:');
   if (!email) {
-    console.error('Email is required');
+    console.error('❌ Email is required');
     process.exit(1);
   }
 
   // Prompt for password
   const password = prompt('Super admin password (min 8 chars):', { echo: false });
   if (!password || password.length < 8) {
-    console.error('Password must be at least 8 characters');
+    console.error('❌ Password must be at least 8 characters');
     process.exit(1);
   }
+
+  console.log('');
 
   // Create super admin
   const passwordHash = await hashPassword(password);
   createSuperAdmin(email, passwordHash);
 
-  console.log('\n✓ Setup completed successfully!');
-  console.log(`✓ Super admin created: ${email}`);
-  console.log(`\nYou can now start the server with: bun run src/main.ts`);
-  console.log(`Or build the binary with: ./build.sh`);
+  console.log('✓ Setup completed successfully!');
+  console.log(`✓ Super admin: ${email}`);
+  console.log(`✓ Base domain: ${baseDomain}`);
+  console.log(`\n📝 Next steps:`);
+  console.log(`   1. Start server: bun run src/main.ts`);
+  console.log(`   2. Login at: http://localhost:${config.port}/admin/login`);
+  console.log(`   3. Create your first tenant`);
+  console.log(`\n💡 For production: ./build.sh to create standalone binary`);
 }
 
 async function main() {
@@ -68,6 +87,23 @@ async function main() {
   if (args.includes('setup')) {
     await runSetupWizard();
     return;
+  }
+
+  // Check if setup has been completed
+  const admin = getSuperAdmin();
+  if (!admin) {
+    console.log(`
+╔═══════════════════════════════════════╗
+║   dustCMS - Setup Required            ║
+╚═══════════════════════════════════════╝
+
+⚠️  You need to run setup first!
+
+Run:  bun run src/main.ts setup
+
+This will configure your admin account and base domain.
+`);
+    process.exit(1);
   }
 
   // Start the server

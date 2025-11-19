@@ -90,7 +90,7 @@ export async function startServer() {
   🗄️  Data directory: ${config.dataDir}
 
   ${!admin ? `⚠️  Setup not complete! Run: bun run src/main.ts setup\n` : ''}  Next steps:
-  ${!admin ? '1. Run setup: bun run src/main.ts setup' : '1. Login at http://localhost:${config.port}/admin/login'}
+  ${!admin ? `1. Run setup: bun run src/main.ts setup` : `1. Login at http://localhost:${config.port}/admin/login`}
   2. Create tenants from the admin dashboard
   3. Define content models for each tenant
   4. Access tenant APIs at: http://tenant-slug.${config.baseDomain}/api/content
