@@ -91,18 +91,4 @@ export const uiRoutes = new Elysia()
     return renderTemplate(tenant.name, tenant.name, content);
   }, {
     type: 'text/html',
-  })
-
-  // Root redirect (only for non-tenant requests)
-  .get('/', ({ set, tenant }) => {
-    // If this is a tenant subdomain, don't handle here - let tenant routes handle it
-    if (tenant) {
-      // This shouldn't normally be reached, but just in case
-      set.redirect = '/login';
-      return '';
-    }
-
-    // No tenant subdomain, redirect to admin
-    set.redirect = '/admin/login';
-    return '';
   });

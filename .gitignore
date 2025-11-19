@@ -1,10 +1,12 @@
 # Dependencies
 node_modules/
 bun.lockb
+package-lock.json
 
 # Build output
 dist/
 cms-server
+static/css/output.css
 
 # Data (exclude all tenant data and databases)
 data/
