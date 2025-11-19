@@ -13,6 +13,7 @@ import { tenantRoutes } from './routes/admin/tenants';
 import { modelRoutes } from './routes/admin/models';
 import { adminContentRoutes } from './routes/admin/content';
 import { imageRoutes } from './routes/admin/images';
+import { integrationRoutes } from './routes/admin/integration';
 import { publicContentRoutes } from './routes/api/content';
 import { uiRoutes } from './routes/ui/pages';
 import { getImagePath } from './services/image';
@@ -51,6 +52,7 @@ export function createServer() {
     .use(modelRoutes)
     .use(adminContentRoutes)
     .use(imageRoutes)
+    .use(integrationRoutes)
 
     // Health check
     .get('/health', () => ({ status: 'ok' }))
