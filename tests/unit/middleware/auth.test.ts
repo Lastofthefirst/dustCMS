@@ -21,11 +21,6 @@ describe('Auth Middleware', () => {
     cleanupTestEnvironment();
   });
 
-  test('should allow access to /setup without authentication', async () => {
-    const response = await makeRequest(app, 'GET', '/setup');
-    expect(response.status).not.toBe(401);
-  });
-
   test('should allow access to /admin/login without authentication', async () => {
     const response = await makeRequest(app, 'GET', '/admin/login');
     expect(response.status).not.toBe(401);

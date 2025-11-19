@@ -2,8 +2,8 @@ import { Elysia } from 'elysia';
 import { getTenant } from '../db/system';
 import { config } from '../config';
 
-export const tenantMiddleware = new Elysia()
-  .derive(({ request }) => {
+export function tenantMiddleware(app: Elysia): Elysia {
+  return app.derive(({ request }) => {
     const host = request.headers.get('host') || '';
     const parts = host.split('.');
 
@@ -31,3 +31,4 @@ export const tenantMiddleware = new Elysia()
       tenant,
     };
   });
+}

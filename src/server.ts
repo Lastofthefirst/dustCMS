@@ -19,13 +19,17 @@ import { uiRoutes } from './routes/ui/pages';
 import { getImagePath } from './services/image';
 
 export function createServer() {
-  const app = new Elysia()
+  let app = new Elysia()
     .use(html())
-    .use(cookie())
+    .use(cookie());
 
-    // Add tenant middleware to all routes
-    .use(tenantMiddleware)
+  // Add tenant middleware to all routes
+  app = tenantMiddleware(app);
 
+  // Apply auth middleware BEFORE routes so they can access isAuthenticated
+  app = authMiddleware(app);
+
+  app = app
     // Serve static images
     .get('/images/:filename', ({ params, tenant, set }) => {
       if (!tenant) {
@@ -37,14 +41,11 @@ export function createServer() {
       return Bun.file(filepath);
     })
 
-    // Public API routes (no auth required)
+    // Public API routes (no auth required, but have access to isAuthenticated)
     .use(publicContentRoutes)
 
-    // UI routes (with auth middleware)
+    // UI routes (now have access to isAuthenticated)
     .use(uiRoutes)
-
-    // Apply auth middleware to admin routes
-    .use(authMiddleware)
 
     // Admin API routes (auth required)
     .use(authRoutes)
@@ -76,6 +77,9 @@ export async function startServer() {
   const app = createServer();
 
   app.listen(config.port, () => {
+    const { getSuperAdmin } = require('./db/system');
+    const admin = getSuperAdmin();
+
     console.log(`
 ╔═══════════════════════════════════════╗
 ║         dustCMS Server Ready          ║
@@ -85,8 +89,8 @@ export async function startServer() {
   📦 Base domain: ${config.baseDomain}
   🗄️  Data directory: ${config.dataDir}
 
-  Next steps:
-  1. Visit http://localhost:${config.port}/setup to configure
+  ${!admin ? `⚠️  Setup not complete! Run: bun run src/main.ts setup\n` : ''}  Next steps:
+  ${!admin ? '1. Run setup: bun run src/main.ts setup' : '1. Login at http://localhost:${config.port}/admin/login'}
   2. Create tenants from the admin dashboard
   3. Define content models for each tenant
   4. Access tenant APIs at: http://tenant-slug.${config.baseDomain}/api/content
