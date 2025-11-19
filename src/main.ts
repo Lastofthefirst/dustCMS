@@ -28,7 +28,7 @@ async function runSetupWizard() {
   const admin = getSuperAdmin();
   if (admin) {
     console.log('✓ Setup already completed!');
-    console.log(`✓ Super admin: ${admin.email}`);
+    console.log(`✓ Super admin: ${admin.username}`);
     console.log(`✓ Base domain: ${config.baseDomain}`);
     console.log('\nRun without "setup" argument to start the server.');
     process.exit(0);
@@ -48,10 +48,10 @@ async function runSetupWizard() {
 
   console.log('');
 
-  // Prompt for email
-  const email = prompt('Super admin email:');
-  if (!email) {
-    console.error('❌ Email is required');
+  // Prompt for username
+  const username = prompt('Super admin username:');
+  if (!username) {
+    console.error('❌ Username is required');
     process.exit(1);
   }
 
@@ -66,10 +66,10 @@ async function runSetupWizard() {
 
   // Create super admin
   const passwordHash = await hashPassword(password);
-  createSuperAdmin(email, passwordHash);
+  createSuperAdmin(username, passwordHash);
 
   console.log('✓ Setup completed successfully!');
-  console.log(`✓ Super admin: ${email}`);
+  console.log(`✓ Super admin: ${username}`);
   console.log(`✓ Base domain: ${baseDomain}`);
   console.log(`\n📝 Next steps:`);
   console.log(`   1. Start server: bun run src/main.ts`);

@@ -21,9 +21,9 @@ export function getSuperAdmin(): SuperAdmin | null {
   return row || null;
 }
 
-export function createSuperAdmin(email: string, passwordHash: string) {
+export function createSuperAdmin(username: string, passwordHash: string) {
   const db = getSystemDb();
-  db.prepare('INSERT INTO super_admin (email, password_hash) VALUES (?, ?)').run(email, passwordHash);
+  db.prepare('INSERT INTO super_admin (username, password_hash) VALUES (?, ?)').run(username, passwordHash);
 }
 
 export function getTenants(): Tenant[] {
@@ -65,11 +65,11 @@ export function deleteTenant(slug: string) {
   db.prepare('DELETE FROM tenants WHERE slug = ?').run(slug);
 }
 
-export function createSession(email: string): string {
+export function createSession(username: string): string {
   const db = getSystemDb();
   const token = crypto.randomUUID();
   const now = Date.now();
-  db.prepare('INSERT INTO sessions (token, email, created_at) VALUES (?, ?, ?)').run(token, email, now);
+  db.prepare('INSERT INTO sessions (token, username, created_at) VALUES (?, ?, ?)').run(token, username, now);
   return token;
 }
 

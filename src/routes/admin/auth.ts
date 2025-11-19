@@ -4,9 +4,9 @@ import { getSuperAdmin } from '../../db/system';
 
 export const authRoutes = new Elysia({ prefix: '/api/auth' })
   .post('/login', async ({ body, cookie, set }) => {
-    const { email, password } = body;
+    const { username, password } = body;
 
-    const token = await authenticateSuperAdmin(email, password);
+    const token = await authenticateSuperAdmin(username, password);
     if (!token) {
       set.status = 401;
       return { error: 'Invalid credentials' };
@@ -23,7 +23,7 @@ export const authRoutes = new Elysia({ prefix: '/api/auth' })
     return { success: true };
   }, {
     body: t.Object({
-      email: t.String(),
+      username: t.String(),
       password: t.String(),
     }),
   })

@@ -3,7 +3,7 @@ import { Database } from 'bun:sqlite';
 export function initSystemDb(db: Database) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS super_admin (
-      email TEXT PRIMARY KEY,
+      username TEXT PRIMARY KEY,
       password_hash TEXT NOT NULL
     );
 
@@ -16,7 +16,7 @@ export function initSystemDb(db: Database) {
 
     CREATE TABLE IF NOT EXISTS sessions (
       token TEXT PRIMARY KEY,
-      email TEXT NOT NULL,
+      username TEXT NOT NULL,
       created_at INTEGER NOT NULL
     );
   `);

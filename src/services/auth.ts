@@ -8,9 +8,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return await Bun.password.verify(password, hash);
 }
 
-export async function authenticateSuperAdmin(email: string, password: string): Promise<string | null> {
+export async function authenticateSuperAdmin(username: string, password: string): Promise<string | null> {
   const admin = getSuperAdmin();
-  if (!admin || admin.email !== email) {
+  if (!admin || admin.username !== username) {
     return null;
   }
 
@@ -19,7 +19,7 @@ export async function authenticateSuperAdmin(email: string, password: string): P
     return null;
   }
 
-  return createSession(email);
+  return createSession(username);
 }
 
 export function validateSession(token: string): boolean {

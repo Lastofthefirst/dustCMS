@@ -1,5 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { listTenants, findTenant, createTenant, updateTenant, deleteTenant } from '../../services/tenant';
+import { generatePassphrase } from '../../services/password';
 
 export const tenantRoutes = new Elysia({ prefix: '/api/admin/tenants' })
   .get('/', () => {
@@ -14,7 +15,9 @@ export const tenantRoutes = new Elysia({ prefix: '/api/admin/tenants' })
   })
   .post('/', ({ body, set }) => {
     try {
-      const tenant = createTenant(body.slug, body.name, body.password);
+      // Auto-generate password if not provided
+      const password = body.password || generatePassphrase(4);
+      const tenant = createTenant(body.slug, body.name, password);
       return { tenant };
     } catch (error: any) {
       set.status = 400;
@@ -24,7 +27,7 @@ export const tenantRoutes = new Elysia({ prefix: '/api/admin/tenants' })
     body: t.Object({
       slug: t.String(),
       name: t.String(),
-      password: t.String(),
+      password: t.Optional(t.String()),
     }),
   })
   .patch('/:slug', ({ params, body, set }) => {
