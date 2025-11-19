@@ -26,6 +26,13 @@ export function createSuperAdmin(username: string, passwordHash: string) {
   db.prepare('INSERT INTO super_admin (username, password_hash) VALUES (?, ?)').run(username, passwordHash);
 }
 
+export function updateSuperAdmin(username: string, passwordHash: string) {
+  const db = getSystemDb();
+  // Delete existing admin and create new one
+  db.prepare('DELETE FROM super_admin').run();
+  db.prepare('INSERT INTO super_admin (username, password_hash) VALUES (?, ?)').run(username, passwordHash);
+}
+
 export function getTenants(): Tenant[] {
   const db = getSystemDb();
   return db.prepare('SELECT * FROM tenants ORDER BY created_at DESC').all() as Tenant[];
