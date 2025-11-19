@@ -74,9 +74,12 @@ export const tenantRoutes = new Elysia({ prefix: '/api/admin/tenants' })
       // Generate new password
       const newPassword = generatePassphrase(4);
 
-      // Hash and update tenant password
+      // Hash and update tenant password (both hashed and plaintext)
       const passwordHash = await hashPassword(newPassword);
-      updateTenant(params.slug, { password: passwordHash });
+      updateTenant(params.slug, {
+        password: passwordHash,
+        password_plaintext: newPassword
+      });
 
       return {
         success: true,

@@ -184,18 +184,23 @@
     <h3 class="font-bold text-2xl mb-4" id="credentials-modal-title">Tenant Credentials</h3>
 
     <div class="space-y-4">
-      <div class="alert alert-warning">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      <div class="alert alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
-        <div>
-          <p class="font-semibold">Password Not Stored</p>
-          <p class="text-sm">Passwords are hashed for security. You can generate a new password below.</p>
-        </div>
+        <span>Tenant credentials are stored securely and accessible only to admins.</span>
       </div>
 
       <div class="bg-base-200 rounded-lg p-4">
-        <h4 class="font-semibold mb-3 text-lg">Login Information</h4>
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="font-semibold text-lg">Login Information</h4>
+          <button class="btn btn-sm btn-ghost gap-2" onclick="copyPasswordOnly()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            Copy Password
+          </button>
+        </div>
         <div id="credentials-info-text" class="font-mono text-sm whitespace-pre-wrap leading-relaxed">
           <!-- Credentials will be inserted here -->
         </div>
@@ -203,12 +208,20 @@
 
       <div class="divider">Actions</div>
 
-      <button class="btn btn-warning w-full gap-2" onclick="regenerateTenantPassword()">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-        </svg>
-        Generate New Password
-      </button>
+      <div class="flex gap-2">
+        <button class="btn btn-primary flex-1 gap-2" onclick="copyWelcomeMessage()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+          </svg>
+          Copy Welcome Message
+        </button>
+        <button class="btn btn-warning flex-1 gap-2" onclick="regenerateTenantPassword()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Reset Password
+        </button>
+      </div>
 
       <div class="modal-action">
         <button class="btn" onclick="closeTenantCredentialsModal()">Close</button>
@@ -397,24 +410,98 @@ For support, contact your system administrator.`;
 
   let currentCredentialsTenant = null;
 
-  function showTenantCredentialsModal(slug, name) {
+  async function showTenantCredentialsModal(slug, name) {
     currentCredentialsTenant = { slug, name };
     document.getElementById('credentials-modal-title').textContent = `${name} - Credentials`;
 
+    // Fetch full tenant data to get plaintext password
+    const response = await fetch(`/api/admin/tenants/${slug}`);
+    const data = await response.json();
+    const tenant = data.tenant;
+
     const baseDomain = window.location.hostname === 'localhost' ? 'localhost:3000' : window.location.hostname;
+
+    const password = tenant.password_plaintext || '(Generate new password below)';
 
     const info = `Organization: ${name}
 Login URL:    ${slug}.${baseDomain}
 Username:     ${slug}
-Password:     (Click "Generate New Password" below)`;
+Password:     ${password}`;
 
     document.getElementById('credentials-info-text').textContent = info;
+
+    // Store current credentials for easy copying
+    currentCredentialsTenant.password = password;
+    currentCredentialsTenant.fullInfo = info;
+
     document.getElementById('tenant-credentials-modal').showModal();
   }
 
   function closeTenantCredentialsModal() {
     document.getElementById('tenant-credentials-modal').close();
     currentCredentialsTenant = null;
+  }
+
+  async function copyPasswordOnly() {
+    if (!currentCredentialsTenant || !currentCredentialsTenant.password) return;
+
+    try {
+      await navigator.clipboard.writeText(currentCredentialsTenant.password);
+      const btn = event.target.closest('button');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!';
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+      }, 2000);
+    } catch (error) {
+      alert('Failed to copy password');
+    }
+  }
+
+  async function copyWelcomeMessage() {
+    if (!currentCredentialsTenant) return;
+
+    const baseDomain = window.location.hostname === 'localhost' ? 'localhost:3000' : window.location.hostname;
+
+    const welcomeMessage = `Welcome to dustCMS!
+
+Your content management system is ready.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LOGIN CREDENTIALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Organization: ${currentCredentialsTenant.name}
+Login URL:    ${currentCredentialsTenant.slug}.${baseDomain}
+Username:     ${currentCredentialsTenant.slug}
+Password:     ${currentCredentialsTenant.password}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GETTING STARTED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Navigate to your login URL above
+2. Sign in with your username and password
+3. Create content models for your needs
+4. Start managing your content!
+
+For support, contact your system administrator.`;
+
+    try {
+      await navigator.clipboard.writeText(welcomeMessage);
+      const btn = event.target.closest('button');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!';
+      btn.classList.add('btn-success');
+      btn.classList.remove('btn-primary');
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-primary');
+      }, 2000);
+    } catch (error) {
+      alert('Failed to copy welcome message');
+    }
   }
 
   async function regenerateTenantPassword() {
@@ -432,13 +519,8 @@ Password:     (Click "Generate New Password" below)`;
       const data = await response.json();
 
       if (response.ok) {
-        // Show the new password in a welcome-style modal
-        closeTenantCredentialsModal();
-        showTenantWelcomeModal({
-          slug: currentCredentialsTenant.slug,
-          name: currentCredentialsTenant.name,
-          password: data.password
-        });
+        // Refresh the credentials modal with new password
+        await showTenantCredentialsModal(currentCredentialsTenant.slug, currentCredentialsTenant.name);
       } else {
         alert('Failed to regenerate password: ' + (data.error || 'Unknown error'));
       }
