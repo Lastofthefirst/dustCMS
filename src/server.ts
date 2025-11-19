@@ -31,6 +31,10 @@ export function createServer() {
   // Apply auth middleware BEFORE routes so they can access isAuthenticated
   app = authMiddleware(app);
 
+  // Apply tenant routes that need access to tenant middleware context
+  app = tenantAuthRoutes(app);
+  app = tenantPagesRoutes(app);
+
   app = app
     // Serve static images
     .get('/images/:filename', ({ params, tenant, set }) => {
@@ -45,10 +49,6 @@ export function createServer() {
 
     // Public API routes (no auth required, but have access to isAuthenticated)
     .use(publicContentRoutes)
-
-    // Tenant routes (for tenant-facing login and dashboard)
-    .use(tenantAuthRoutes)
-    .use(tenantPagesRoutes)
 
     // UI routes (now have access to isAuthenticated)
     .use(uiRoutes)
