@@ -1,7 +1,18 @@
 import { Elysia } from 'elysia';
 import { listContentItems, findContentItem, findSingletonContent, findContentModel } from '../../services/content';
+import { listContentModels } from '../../services/model';
 
 export const publicContentRoutes = new Elysia({ prefix: '/api/content' })
+  // List all content models for a tenant
+  .get('/:tenantSlug/models', ({ params, set }) => {
+    try {
+      const models = listContentModels(params.tenantSlug);
+      return { models };
+    } catch (error: any) {
+      set.status = 400;
+      return { error: error.message };
+    }
+  })
   .get('/:modelSlug', ({ params, tenant, set }) => {
     if (!tenant) {
       set.status = 404;

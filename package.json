@@ -7,8 +7,10 @@
   "scripts": {
     "start": "bun run src/main.ts",
     "dev": "bun run --hot src/main.ts",
+    "dev:css": "tailwindcss -i ./src/styles/input.css -o ./static/css/output.css --watch",
+    "build:css": "tailwindcss -i ./src/styles/input.css -o ./static/css/output.css --minify",
     "setup": "bun run src/main.ts setup",
-    "build": "./build.sh",
+    "build": "bun run build:css && ./build.sh",
     "test": "bun test tests/unit tests/integration && playwright test",
     "test:unit": "bun test tests/unit",
     "test:integration": "bun test tests/integration",
@@ -20,14 +22,16 @@
     "test:coverage": "bun test --coverage"
   },
   "dependencies": {
-    "elysia": "^1.1.0",
+    "@elysiajs/cookie": "^0.8.0",
     "@elysiajs/html": "^1.0.0",
     "@elysiajs/static": "^1.0.0",
-    "@elysiajs/cookie": "^0.8.0",
+    "elysia": "^1.1.0",
     "sharp": "^0.33.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
     "bun-types": "latest",
-    "@playwright/test": "^1.40.0"
+    "daisyui": "^4.12.24",
+    "tailwindcss": "^3.4.18"
   }
 }

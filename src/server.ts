@@ -24,7 +24,12 @@ import { getImagePath } from './services/image';
 export function createServer() {
   let app = new Elysia()
     .use(html())
-    .use(cookie());
+    .use(cookie())
+    // Serve static files (CSS, JS, etc.)
+    .get('/static/*', ({ params }) => {
+      const filepath = join(process.cwd(), 'static', params['*']);
+      return Bun.file(filepath);
+    });
 
   // Add tenant middleware to all routes
   app = tenantMiddleware(app);
@@ -62,6 +67,17 @@ export function createServer() {
 
       const filepath = getImagePath(tenant.slug, params.filename);
       return Bun.file(filepath);
+    })
+
+    // Root redirect for non-tenant requests
+    .get('/', ({ set, tenant }) => {
+      if (!tenant) {
+        set.redirect = '/admin/login';
+        return '';
+      }
+      // Tenant requests should have been handled by tenant routes
+      set.status = 404;
+      return 'Not found';
     })
 
     // Health check
