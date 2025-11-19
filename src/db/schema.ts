@@ -1,6 +1,6 @@
-import Database from 'better-sqlite3';
+import { Database } from 'bun:sqlite';
 
-export function initSystemDb(db: Database.Database) {
+export function initSystemDb(db: Database) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS super_admin (
       email TEXT PRIMARY KEY,
@@ -22,7 +22,7 @@ export function initSystemDb(db: Database.Database) {
   `);
 }
 
-export function initTenantDb(db: Database.Database) {
+export function initTenantDb(db: Database) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS content_models (
       slug TEXT PRIMARY KEY,
@@ -33,7 +33,7 @@ export function initTenantDb(db: Database.Database) {
   `);
 }
 
-export function createContentTable(db: Database.Database, modelSlug: string, fields: any[]) {
+export function createContentTable(db: Database, modelSlug: string, fields: any[]) {
   const columns = fields
     .map(f => `${f.name} TEXT${f.required ? ' NOT NULL' : ''}`)
     .join(', ');

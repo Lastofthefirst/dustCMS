@@ -7,22 +7,22 @@ import {
   deleteContentModel,
 } from '../../services/content';
 
-export const modelRoutes = new Elysia({ prefix: '/api/admin/tenants/:tenantSlug/models' })
-  .get('/', ({ params }) => {
-    const models = listContentModels(params.tenantSlug);
+export const modelRoutes = new Elysia()
+  .get('/api/admin/tenants/:slug/models', ({ params }) => {
+    const models = listContentModels(params.slug);
     return { models };
   })
-  .get('/:modelSlug', ({ params, set }) => {
-    const model = findContentModel(params.tenantSlug, params.modelSlug);
+  .get('/api/admin/tenants/:slug/models/:modelSlug', ({ params, set }) => {
+    const model = findContentModel(params.slug, params.modelSlug);
     if (!model) {
       set.status = 404;
       return { error: 'Content model not found' };
     }
     return { model };
   })
-  .post('/', ({ params, body, set }) => {
+  .post('/api/admin/tenants/:slug/models', ({ params, body, set }) => {
     try {
-      createContentModel(params.tenantSlug, body);
+      createContentModel(params.slug, body);
       return { success: true };
     } catch (error: any) {
       set.status = 400;
@@ -41,9 +41,9 @@ export const modelRoutes = new Elysia({ prefix: '/api/admin/tenants/:tenantSlug/
       })),
     }),
   })
-  .patch('/:modelSlug', ({ params, body, set }) => {
+  .patch('/api/admin/tenants/:slug/models/:modelSlug', ({ params, body, set }) => {
     try {
-      updateContentModel(params.tenantSlug, params.modelSlug, body);
+      updateContentModel(params.slug, params.modelSlug, body);
       return { success: true };
     } catch (error: any) {
       set.status = 400;
@@ -60,9 +60,9 @@ export const modelRoutes = new Elysia({ prefix: '/api/admin/tenants/:tenantSlug/
       }))),
     }),
   })
-  .delete('/:modelSlug', ({ params, set }) => {
+  .delete('/api/admin/tenants/:slug/models/:modelSlug', ({ params, set }) => {
     try {
-      deleteContentModel(params.tenantSlug, params.modelSlug);
+      deleteContentModel(params.slug, params.modelSlug);
       return { success: true };
     } catch (error: any) {
       set.status = 400;

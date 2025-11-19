@@ -1,12 +1,12 @@
-import Database from 'better-sqlite3';
+import { Database } from 'bun:sqlite';
 import { join } from 'path';
 import { config } from '../config';
 import { initSystemDb } from './schema';
 import type { SuperAdmin, Tenant, Session } from '../models/types';
 
-let systemDb: Database.Database | null = null;
+let systemDb: Database | null = null;
 
-export function getSystemDb(): Database.Database {
+export function getSystemDb(): Database {
   if (!systemDb) {
     const dbPath = join(config.dataDir, 'system.db');
     systemDb = new Database(dbPath);
@@ -82,4 +82,12 @@ export function getSession(token: string): Session | null {
 export function deleteSession(token: string) {
   const db = getSystemDb();
   db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
+}
+
+// Test helper to reset database connection
+export function closeSystemDb() {
+  if (systemDb) {
+    systemDb.close();
+    systemDb = null;
+  }
 }

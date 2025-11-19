@@ -7,18 +7,22 @@
   "scripts": {
     "dev": "bun run --hot src/main.ts",
     "build": "./build.sh",
-    "setup": "bun run src/main.ts setup"
+    "setup": "bun run src/main.ts setup",
+    "test": "bun test",
+    "test:unit": "bun test tests/unit",
+    "test:integration": "bun test tests/integration",
+    "test:e2e": "bun test tests/e2e",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage"
   },
   "dependencies": {
     "elysia": "^1.1.0",
     "@elysiajs/html": "^1.0.0",
     "@elysiajs/static": "^1.0.0",
     "@elysiajs/cookie": "^0.8.0",
-    "sharp": "^0.33.0",
-    "better-sqlite3": "^11.0.0"
+    "sharp": "^0.33.0"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.0",
     "bun-types": "latest"
   }
 }
