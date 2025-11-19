@@ -1,54 +1,59 @@
 <div class="min-h-screen bg-base-200">
   <!-- Navbar -->
-  <div class="navbar bg-base-100 shadow-lg">
-    <div class="flex-1">
-      <a href="/admin" class="btn btn-ghost gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <div class="navbar bg-base-100 shadow-lg sticky top-0 z-50">
+    <div class="flex-1 min-w-0">
+      <a href="/admin" class="btn btn-ghost btn-sm sm:btn-md gap-1 sm:gap-2">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
         </svg>
-        Back
+        <span class="hidden sm:inline">Back</span>
       </a>
-      <span class="text-xl font-bold ml-4">{{TENANT_NAME}}</span>
+      <span class="text-base sm:text-xl font-bold ml-2 sm:ml-4 truncate">{{TENANT_NAME}}</span>
     </div>
-    <div class="flex-none gap-2">
-      <div class="badge badge-primary">{{TENANT_SLUG}}</div>
-      <button class="btn btn-ghost" onclick="logout()">Logout</button>
+    <div class="flex-none gap-1 sm:gap-2">
+      <div class="badge badge-primary badge-sm sm:badge-md text-xs sm:text-sm">{{TENANT_SLUG}}</div>
+      <button class="btn btn-ghost btn-sm sm:btn-md" onclick="logout()">
+        <span class="hidden sm:inline">Logout</span>
+        <svg class="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+        </svg>
+      </button>
     </div>
   </div>
 
   <!-- Main Content -->
-  <div class="container mx-auto p-6 max-w-7xl">
+  <div class="container mx-auto p-4 sm:p-6 max-w-7xl pb-20">
     <!-- Tabs -->
-    <div role="tablist" class="tabs tabs-boxed mb-6">
+    <div role="tablist" class="tabs tabs-boxed mb-6 text-xs sm:text-sm">
       <a role="tab" class="tab tab-active" id="models-tab" onclick="switchTab('models')">Content Models</a>
       <a role="tab" class="tab" id="images-tab" onclick="switchTab('images')">Media Library</a>
     </div>
 
     <!-- Models Tab -->
     <div id="models-panel">
-      <div class="flex justify-between items-center mb-6">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
         <div>
-          <h2 class="text-3xl font-bold">Content Models</h2>
-          <p class="text-base-content/70">Define your content structure</p>
+          <h2 class="text-2xl sm:text-3xl font-bold">Content Models</h2>
+          <p class="text-sm sm:text-base text-base-content/70">Define your content structure</p>
         </div>
-        <div class="flex gap-2">
-          <button class="btn btn-outline gap-2" onclick="copyLLMPrompt(event)">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex flex-wrap gap-2">
+          <button class="btn btn-outline btn-sm gap-1 sm:gap-2" onclick="copyLLMPrompt(event)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
             </svg>
-            LLM Prompt
+            <span class="text-xs">LLM</span>
           </button>
-          <button class="btn btn-outline gap-2" onclick="showImportModelModal()">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button class="btn btn-outline btn-sm gap-1 sm:gap-2" onclick="showImportModelModal()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
             </svg>
-            Import Model
+            <span class="text-xs">Import</span>
           </button>
-          <button class="btn btn-primary gap-2" onclick="showCreateModelModal()">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button class="btn btn-primary btn-sm gap-1 sm:gap-2" onclick="showCreateModelModal()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
-            Create Model
+            <span class="text-xs sm:text-sm">Create Model</span>
           </button>
         </div>
       </div>
@@ -60,13 +65,13 @@
 
     <!-- Images Tab -->
     <div id="images-panel" class="hidden">
-      <div class="flex justify-between items-center mb-6">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
         <div>
-          <h2 class="text-3xl font-bold">Media Library</h2>
-          <p class="text-base-content/70">Upload and manage images</p>
+          <h2 class="text-2xl sm:text-3xl font-bold">Media Library</h2>
+          <p class="text-sm sm:text-base text-base-content/70">Upload and manage images</p>
         </div>
-        <button class="btn btn-primary gap-2" onclick="document.getElementById('image-upload').click()">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button class="btn btn-primary btn-sm sm:btn-md gap-2 w-full sm:w-auto" onclick="document.getElementById('image-upload').click()">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
           </svg>
           Upload Image
@@ -74,7 +79,7 @@
         <input type="file" id="image-upload" class="hidden" accept="image/*" onchange="uploadImage(event)" />
       </div>
 
-      <div id="images-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div id="images-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
         <!-- Images will be loaded here -->
       </div>
     </div>

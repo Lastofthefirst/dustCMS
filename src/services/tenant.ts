@@ -38,8 +38,9 @@ export async function createTenant(slug: string, name: string, password: string)
   // Hash password before storing
   const passwordHash = await hashPassword(password);
 
-  // Create tenant in database with hashed password
-  return dbCreateTenant({ slug, name, password: passwordHash });
+  // Create tenant in database with both hashed and plaintext passwords
+  // Plaintext is stored for admin access only (admin dashboard is protected)
+  return dbCreateTenant({ slug, name, password: passwordHash, password_plaintext: password });
 }
 
 export function updateTenant(slug: string, updates: Partial<Tenant>) {

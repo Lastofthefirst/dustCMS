@@ -18,6 +18,7 @@ import { publicContentRoutes } from './routes/api/content';
 import { uiRoutes } from './routes/ui/pages';
 import { tenantAuthRoutes } from './routes/tenant/auth';
 import { tenantPagesRoutes } from './routes/tenant/pages';
+import { tenantImageRoutes } from './routes/tenant/images';
 import { getImagePath } from './services/image';
 
 export function createServer() {
@@ -34,6 +35,7 @@ export function createServer() {
   // Apply tenant routes that need access to tenant middleware context
   app = tenantAuthRoutes(app);
   app = tenantPagesRoutes(app);
+  app = tenantImageRoutes(app);
 
   app = app
     // Serve static images

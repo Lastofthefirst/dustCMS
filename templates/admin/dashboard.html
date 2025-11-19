@@ -1,35 +1,37 @@
 <div class="min-h-screen bg-base-200">
   <!-- Navbar -->
-  <div class="navbar bg-base-100 shadow-lg">
+  <div class="navbar bg-base-100 shadow-lg sticky top-0 z-50">
     <div class="flex-1">
-      <a href="/admin" class="btn btn-ghost text-xl">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <a href="/admin" class="btn btn-ghost text-lg sm:text-xl">
+        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
         </svg>
-        dustCMS
+        <span class="hidden sm:inline">dustCMS</span>
       </a>
     </div>
-    <div class="flex-none gap-2">
-      <div class="badge badge-primary badge-lg">Super Admin</div>
-      <button class="btn btn-ghost" onclick="logout()">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="flex-none gap-1 sm:gap-2">
+      <div class="badge badge-primary badge-sm sm:badge-md">
+        <span class="hidden sm:inline">Super </span>Admin
+      </div>
+      <button class="btn btn-ghost btn-sm sm:btn-md" onclick="logout()">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
         </svg>
-        Logout
+        <span class="hidden sm:inline ml-1">Logout</span>
       </button>
     </div>
   </div>
 
   <!-- Main Content -->
-  <div class="container mx-auto p-6 max-w-7xl">
+  <div class="container mx-auto p-4 sm:p-6 max-w-7xl pb-20">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold mb-2">Tenant Management</h1>
-      <p class="text-base-content/70">Manage your multi-tenant CMS instances</p>
+    <div class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Tenant Management</h1>
+      <p class="text-sm sm:text-base text-base-content/70">Manage your multi-tenant CMS instances</p>
     </div>
 
     <!-- Stats -->
-    <div class="stats stats-vertical lg:stats-horizontal shadow-lg mb-8 w-full">
+    <div class="stats stats-vertical sm:stats-horizontal shadow-lg mb-6 sm:mb-8 w-full">
       <div class="stat">
         <div class="stat-figure text-primary">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,8 +57,8 @@
 
     <!-- Actions -->
     <div class="flex gap-4 mb-6">
-      <button class="btn btn-primary gap-2" onclick="showCreateTenantModal()">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button class="btn btn-primary gap-2 btn-sm sm:btn-md w-full sm:w-auto" onclick="showCreateTenantModal()">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
         </svg>
         Create New Tenant
@@ -65,8 +67,8 @@
 
     <!-- Tenants List -->
     <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
-        <h2 class="card-title text-2xl mb-4">Your Tenants</h2>
+      <div class="card-body p-4 sm:p-6">
+        <h2 class="card-title text-xl sm:text-2xl mb-4">Your Tenants</h2>
         <div id="tenants-list" class="space-y-4">
           <!-- Tenants will be loaded here -->
         </div>
@@ -142,7 +144,7 @@
 
 <!-- Tenant Welcome Modal -->
 <dialog id="tenant-welcome-modal" class="modal">
-  <div class="modal-box max-w-2xl">
+  <div class="modal-box max-w-2xl w-full mx-4">
     <h3 class="font-bold text-2xl mb-4">
       <svg class="w-8 h-8 inline-block text-success mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -165,14 +167,14 @@
         </div>
       </div>
 
-      <div class="flex gap-2">
-        <button class="btn btn-primary flex-1 gap-2" onclick="copyTenantCredentials()">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="flex flex-col sm:flex-row gap-2">
+        <button class="btn btn-primary flex-1 gap-2 btn-sm sm:btn-md" onclick="copyTenantCredentials()">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
           </svg>
           Copy to Clipboard
         </button>
-        <button class="btn btn-ghost" onclick="closeTenantWelcomeModal()">Done</button>
+        <button class="btn btn-ghost btn-sm sm:btn-md" onclick="closeTenantWelcomeModal()">Done</button>
       </div>
     </div>
   </div>
@@ -180,22 +182,27 @@
 
 <!-- Tenant Credentials Modal (View/Regenerate) -->
 <dialog id="tenant-credentials-modal" class="modal">
-  <div class="modal-box max-w-2xl">
+  <div class="modal-box max-w-2xl w-full mx-4">
     <h3 class="font-bold text-2xl mb-4" id="credentials-modal-title">Tenant Credentials</h3>
 
     <div class="space-y-4">
-      <div class="alert alert-warning">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      <div class="alert alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
-        <div>
-          <p class="font-semibold">Password Not Stored</p>
-          <p class="text-sm">Passwords are hashed for security. You can generate a new password below.</p>
-        </div>
+        <span>Tenant credentials are stored securely and accessible only to admins.</span>
       </div>
 
       <div class="bg-base-200 rounded-lg p-4">
-        <h4 class="font-semibold mb-3 text-lg">Login Information</h4>
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="font-semibold text-lg">Login Information</h4>
+          <button class="btn btn-sm btn-ghost gap-2" onclick="copyPasswordOnly()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            Copy Password
+          </button>
+        </div>
         <div id="credentials-info-text" class="font-mono text-sm whitespace-pre-wrap leading-relaxed">
           <!-- Credentials will be inserted here -->
         </div>
@@ -203,12 +210,20 @@
 
       <div class="divider">Actions</div>
 
-      <button class="btn btn-warning w-full gap-2" onclick="regenerateTenantPassword()">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-        </svg>
-        Generate New Password
-      </button>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <button class="btn btn-primary flex-1 gap-2 btn-sm sm:btn-md" onclick="copyWelcomeMessage()">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+          </svg>
+          <span class="text-xs sm:text-sm">Copy Welcome Message</span>
+        </button>
+        <button class="btn btn-warning flex-1 gap-2 btn-sm sm:btn-md" onclick="regenerateTenantPassword()">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <span class="text-xs sm:text-sm">Reset Password</span>
+        </button>
+      </div>
 
       <div class="modal-action">
         <button class="btn" onclick="closeTenantCredentialsModal()">Close</button>
@@ -248,33 +263,33 @@
 
     list.innerHTML = tenants.map(tenant => `
       <div class="card bg-base-200 hover:bg-base-300 transition-colors">
-        <div class="card-body">
-          <div class="flex items-center justify-between">
+        <div class="card-body p-4 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="flex-1">
-              <h3 class="card-title text-xl">${escapeHtml(tenant.name)}</h3>
+              <h3 class="card-title text-lg sm:text-xl">${escapeHtml(tenant.name)}</h3>
               <p class="text-sm text-base-content/70 mt-1">
-                <span class="font-mono bg-base-100 px-2 py-1 rounded">${escapeHtml(tenant.slug)}</span>
+                <span class="font-mono bg-base-100 px-2 py-1 rounded text-xs sm:text-sm">${escapeHtml(tenant.slug)}</span>
               </p>
               <p class="text-xs text-base-content/50 mt-2">
                 Created: ${new Date(tenant.created_at).toLocaleDateString()}
               </p>
             </div>
-            <div class="flex gap-2">
-              <button class="btn btn-info btn-sm gap-2" onclick="showTenantCredentialsModal('${escapeHtml(tenant.slug)}', '${escapeHtml(tenant.name)}')">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex flex-wrap sm:flex-nowrap gap-2">
+              <button class="btn btn-info btn-xs sm:btn-sm gap-1 sm:gap-2 flex-1 sm:flex-none" onclick="showTenantCredentialsModal('${escapeHtml(tenant.slug)}', '${escapeHtml(tenant.name)}')">
+                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
                 </svg>
-                Credentials
+                <span class="text-xs sm:text-sm">Credentials</span>
               </button>
-              <a href="/admin/tenants/${encodeURIComponent(tenant.slug)}" class="btn btn-primary btn-sm gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <a href="/admin/tenants/${encodeURIComponent(tenant.slug)}" class="btn btn-primary btn-xs sm:btn-sm gap-1 sm:gap-2 flex-1 sm:flex-none">
+                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
-                Manage
+                <span class="text-xs sm:text-sm">Manage</span>
               </a>
-              <button class="btn btn-error btn-sm btn-outline" onclick="deleteTenant('${escapeHtml(tenant.slug)}')">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button class="btn btn-error btn-xs sm:btn-sm btn-outline btn-square" onclick="deleteTenant('${escapeHtml(tenant.slug)}')" title="Delete">
+                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
               </button>
@@ -397,24 +412,98 @@ For support, contact your system administrator.`;
 
   let currentCredentialsTenant = null;
 
-  function showTenantCredentialsModal(slug, name) {
+  async function showTenantCredentialsModal(slug, name) {
     currentCredentialsTenant = { slug, name };
     document.getElementById('credentials-modal-title').textContent = `${name} - Credentials`;
 
+    // Fetch full tenant data to get plaintext password
+    const response = await fetch(`/api/admin/tenants/${slug}`);
+    const data = await response.json();
+    const tenant = data.tenant;
+
     const baseDomain = window.location.hostname === 'localhost' ? 'localhost:3000' : window.location.hostname;
+
+    const password = tenant.password_plaintext || '(Generate new password below)';
 
     const info = `Organization: ${name}
 Login URL:    ${slug}.${baseDomain}
 Username:     ${slug}
-Password:     (Click "Generate New Password" below)`;
+Password:     ${password}`;
 
     document.getElementById('credentials-info-text').textContent = info;
+
+    // Store current credentials for easy copying
+    currentCredentialsTenant.password = password;
+    currentCredentialsTenant.fullInfo = info;
+
     document.getElementById('tenant-credentials-modal').showModal();
   }
 
   function closeTenantCredentialsModal() {
     document.getElementById('tenant-credentials-modal').close();
     currentCredentialsTenant = null;
+  }
+
+  async function copyPasswordOnly() {
+    if (!currentCredentialsTenant || !currentCredentialsTenant.password) return;
+
+    try {
+      await navigator.clipboard.writeText(currentCredentialsTenant.password);
+      const btn = event.target.closest('button');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!';
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+      }, 2000);
+    } catch (error) {
+      alert('Failed to copy password');
+    }
+  }
+
+  async function copyWelcomeMessage() {
+    if (!currentCredentialsTenant) return;
+
+    const baseDomain = window.location.hostname === 'localhost' ? 'localhost:3000' : window.location.hostname;
+
+    const welcomeMessage = `Welcome to dustCMS!
+
+Your content management system is ready.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LOGIN CREDENTIALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Organization: ${currentCredentialsTenant.name}
+Login URL:    ${currentCredentialsTenant.slug}.${baseDomain}
+Username:     ${currentCredentialsTenant.slug}
+Password:     ${currentCredentialsTenant.password}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GETTING STARTED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Navigate to your login URL above
+2. Sign in with your username and password
+3. Create content models for your needs
+4. Start managing your content!
+
+For support, contact your system administrator.`;
+
+    try {
+      await navigator.clipboard.writeText(welcomeMessage);
+      const btn = event.target.closest('button');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!';
+      btn.classList.add('btn-success');
+      btn.classList.remove('btn-primary');
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-primary');
+      }, 2000);
+    } catch (error) {
+      alert('Failed to copy welcome message');
+    }
   }
 
   async function regenerateTenantPassword() {
@@ -432,13 +521,8 @@ Password:     (Click "Generate New Password" below)`;
       const data = await response.json();
 
       if (response.ok) {
-        // Show the new password in a welcome-style modal
-        closeTenantCredentialsModal();
-        showTenantWelcomeModal({
-          slug: currentCredentialsTenant.slug,
-          name: currentCredentialsTenant.name,
-          password: data.password
-        });
+        // Refresh the credentials modal with new password
+        await showTenantCredentialsModal(currentCredentialsTenant.slug, currentCredentialsTenant.name);
       } else {
         alert('Failed to regenerate password: ' + (data.error || 'Unknown error'));
       }

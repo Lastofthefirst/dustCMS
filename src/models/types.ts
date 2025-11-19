@@ -8,7 +8,8 @@ export interface SuperAdmin {
 export interface Tenant {
   slug: string;
   name: string;
-  password: string; // auto-generated passphrase
+  password: string; // hashed password for authentication
+  password_plaintext?: string; // plaintext for admin access only
   created_at: number;
 }
 
