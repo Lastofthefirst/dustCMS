@@ -163,7 +163,7 @@
       return;
     }
     list.innerHTML = models.map(model => `
-      <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer" onclick="openContentEditor('${model.slug}')">
+      <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"><div class="card-body"><h3 class="card-title">${escapeHtml(model.name)}</h3><p class="text-sm text-base-content/70">${model.type === 'collection' ? 'Collection' : 'Singleton'}</p><div class="flex gap-2 mt-4"><button class="btn btn-sm btn-primary flex-1" onclick="event.stopPropagation(); openContentEditor('${model.slug}')">
         <div class="card-body">
           <h3 class="card-title">${escapeHtml(model.name)}</h3>
           <p class="text-sm text-base-content/70">${model.type === 'collection' ? 'Collection' : 'Singleton'}</p>
@@ -346,4 +346,183 @@
   }
 
   loadModels();
+</script>
+<!-- Integration Code Modal -->
+<dialog id="integration-modal" class="modal">
+  <div class="modal-box max-w-4xl">
+    <form method="dialog">
+      <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+    </form>
+
+    <h3 class="font-bold text-2xl mb-2" id="integration-title">API Integration</h3>
+    <p class="text-base-content/70 mb-6">Use this content in your static site</p>
+
+    <!-- API Endpoint -->
+    <div class="mb-6">
+      <label class="label">
+        <span class="label-text font-semibold">API Endpoint</span>
+      </label>
+      <div class="flex gap-2">
+        <input id="endpoint-url" readonly class="input input-bordered flex-1 font-mono text-sm" value="" />
+        <button class="btn btn-primary" onclick="copyToClipboard('endpoint-url')">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+          </svg>
+          Copy
+        </button>
+      </div>
+    </div>
+
+    <!-- Code Tabs -->
+    <div role="tablist" class="tabs tabs-boxed mb-4">
+      <a role="tab" class="tab tab-active" onclick="switchCodeTab('javascript')">JavaScript</a>
+      <a role="tab" class="tab" onclick="switchCodeTab('html')">HTML</a>
+      <a role="tab" class="tab" onclick="switchCodeTab('fetch')">Fetch API</a>
+      <a role="tab" class="tab" onclick="switchCodeTab('curl')">cURL</a>
+    </div>
+
+    <!-- Code Snippets -->
+    <div id="code-snippets">
+      <div id="snippet-javascript" class="code-snippet">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-semibold">JavaScript Example</span>
+          <button class="btn btn-sm btn-ghost" onclick="copyCodeSnippet('javascript')">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            Copy Code
+          </button>
+        </div>
+        <pre class="bg-base-300 p-4 rounded-lg overflow-x-auto"><code id="code-javascript" class="text-sm"></code></pre>
+      </div>
+
+      <div id="snippet-html" class="code-snippet hidden">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-semibold">HTML Example</span>
+          <button class="btn btn-sm btn-ghost" onclick="copyCodeSnippet('html')">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            Copy Code
+          </button>
+        </div>
+        <pre class="bg-base-300 p-4 rounded-lg overflow-x-auto"><code id="code-html" class="text-sm"></code></pre>
+      </div>
+
+      <div id="snippet-fetch" class="code-snippet hidden">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-semibold">Fetch API Example</span>
+          <button class="btn btn-sm btn-ghost" onclick="copyCodeSnippet('fetch')">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            Copy Code
+          </button>
+        </div>
+        <pre class="bg-base-300 p-4 rounded-lg overflow-x-auto"><code id="code-fetch" class="text-sm"></code></pre>
+      </div>
+
+      <div id="snippet-curl" class="code-snippet hidden">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-semibold">cURL Example</span>
+          <button class="btn btn-sm btn-ghost" onclick="copyCodeSnippet('curl')">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            Copy Code
+          </button>
+        </div>
+        <pre class="bg-base-300 p-4 rounded-lg overflow-x-auto"><code id="code-curl" class="text-sm"></code></pre>
+      </div>
+    </div>
+
+    <!-- Instructions (Collapsible) -->
+    <div class="collapse collapse-arrow bg-base-200 mt-6">
+      <input type="checkbox" />
+      <div class="collapse-title text-lg font-medium">
+        📖 Detailed Instructions & Documentation
+      </div>
+      <div class="collapse-content">
+        <div id="instructions-content" class="prose prose-sm max-w-none"></div>
+      </div>
+    </div>
+
+    <div class="modal-action">
+      <form method="dialog">
+        <button class="btn">Close</button>
+      </form>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
+
+<script>
+  let currentIntegrationData = null;
+
+  function switchCodeTab(tab) {
+    // Update tab styles
+    document.querySelectorAll('[role="tab"]').forEach(t => {
+      t.classList.toggle('tab-active', t.textContent.toLowerCase().includes(tab));
+    });
+
+    // Show/hide snippets
+    document.querySelectorAll('.code-snippet').forEach(s => {
+      s.classList.add('hidden');
+    });
+    document.getElementById(`snippet-${tab}`).classList.remove('hidden');
+  }
+
+  async function showIntegrationModal(modelSlug) {
+    const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/integration/${modelSlug}`);
+    const data = await response.json();
+    currentIntegrationData = data;
+
+    // Update title
+    document.getElementById('integration-title').textContent = `${data.model.name} - API Integration`;
+
+    // Update endpoint
+    document.getElementById('endpoint-url').value = data.endpoint;
+
+    // Update code snippets
+    document.getElementById('code-javascript').textContent = data.snippets.javascript;
+    document.getElementById('code-html').textContent = data.snippets.html;
+    document.getElementById('code-fetch').textContent = data.snippets.fetch;
+    document.getElementById('code-curl').textContent = data.snippets.curl;
+
+    // Update instructions (convert markdown to HTML - simple version)
+    document.getElementById('instructions-content').innerHTML =
+      data.instructions.replace(/\n/g, '<br>').replace(/```json/g, '<pre class="bg-base-300 p-2 rounded"><code>').replace(/```/g, '</code></pre>');
+
+    // Show modal
+    document.getElementById('integration-modal').showModal();
+  }
+
+  function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    document.execCommand('copy');
+
+    // Visual feedback
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '✓ Copied!';
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+    }, 2000);
+  }
+
+  function copyCodeSnippet(type) {
+    const code = document.getElementById(`code-${type}`).textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      // Visual feedback
+      const btn = event.target.closest('button');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<span class="text-success">✓ Copied!</span>';
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+      }, 2000);
+    });
+  }
 </script>

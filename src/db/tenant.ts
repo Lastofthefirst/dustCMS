@@ -1,12 +1,12 @@
-import Database from 'better-sqlite3';
+import { Database } from 'bun:sqlite';
 import { join } from 'path';
 import { config } from '../config';
 import { initTenantDb, createContentTable } from './schema';
 import type { ContentModel, ContentItem } from '../models/types';
 
-const tenantDbs: Map<string, Database.Database> = new Map();
+const tenantDbs: Map<string, Database> = new Map();
 
-export function getTenantDb(tenantSlug: string): Database.Database {
+export function getTenantDb(tenantSlug: string): Database {
   if (!tenantDbs.has(tenantSlug)) {
     const dbPath = join(config.dataDir, 'tenants', tenantSlug, 'content.db');
     const db = new Database(dbPath);
@@ -155,4 +155,13 @@ export function updateSingletonContent(tenantSlug: string, modelSlug: string, da
 export function deleteContentItem(tenantSlug: string, modelSlug: string, itemId: number) {
   const db = getTenantDb(tenantSlug);
   db.prepare(`DELETE FROM content_${modelSlug} WHERE id = ?`).run(itemId);
+}
+
+
+// Test helper to reset database connections
+export function closeTenantDbs() {
+  for (const db of tenantDbs.values()) {
+    db.close();
+  }
+  tenantDbs.clear();
 }

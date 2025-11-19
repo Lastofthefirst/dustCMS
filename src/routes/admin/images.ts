@@ -1,12 +1,12 @@
 import { Elysia } from 'elysia';
 import { uploadAndOptimizeImage, listImages, deleteImage } from '../../services/image';
 
-export const imageRoutes = new Elysia({ prefix: '/api/admin/tenants/:tenantSlug/images' })
-  .get('/', ({ params }) => {
-    const images = listImages(params.tenantSlug);
+export const imageRoutes = new Elysia()
+  .get('/api/admin/tenants/:slug/images', ({ params }) => {
+    const images = listImages(params.slug);
     return { images };
   })
-  .post('/', async ({ params, body, set }) => {
+  .post('/api/admin/tenants/:slug/images', async ({ params, body, set }) => {
     try {
       const file = body.file as File;
       if (!file) {
@@ -14,16 +14,16 @@ export const imageRoutes = new Elysia({ prefix: '/api/admin/tenants/:tenantSlug/
         return { error: 'No file provided' };
       }
 
-      const filename = await uploadAndOptimizeImage(params.tenantSlug, file);
+      const filename = await uploadAndOptimizeImage(params.slug, file);
       return { filename, url: `/images/${filename}` };
     } catch (error: any) {
       set.status = 400;
       return { error: error.message };
     }
   })
-  .delete('/:filename', ({ params, set }) => {
+  .delete('/api/admin/tenants/:slug/images/:filename', ({ params, set }) => {
     try {
-      deleteImage(params.tenantSlug, params.filename);
+      deleteImage(params.slug, params.filename);
       return { success: true };
     } catch (error: any) {
       set.status = 400;

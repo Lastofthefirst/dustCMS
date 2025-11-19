@@ -9,19 +9,28 @@ import {
   deleteContentItem,
 } from '../../services/content';
 
-export const adminContentRoutes = new Elysia({ prefix: '/api/admin/tenants/:tenantSlug/content' })
-  .get('/:modelSlug', ({ params, set }) => {
+export const adminContentRoutes = new Elysia()
+  .get('/api/admin/tenants/:slug/content/:modelSlug', ({ params, set }) => {
     try {
-      const items = listContentItems(params.tenantSlug, params.modelSlug);
+      const items = listContentItems(params.slug, params.modelSlug);
       return { items };
     } catch (error: any) {
       set.status = 400;
       return { error: error.message };
     }
   })
-  .get('/:modelSlug/:itemId', ({ params, set }) => {
+  .get('/api/admin/tenants/:slug/content/:modelSlug/singleton', ({ params, set }) => {
     try {
-      const item = findContentItem(params.tenantSlug, params.modelSlug, parseInt(params.itemId));
+      const item = findSingletonContent(params.slug, params.modelSlug);
+      return { item };
+    } catch (error: any) {
+      set.status = 400;
+      return { error: error.message };
+    }
+  })
+  .get('/api/admin/tenants/:slug/content/:modelSlug/:itemId', ({ params, set }) => {
+    try {
+      const item = findContentItem(params.slug, params.modelSlug, parseInt(params.itemId));
       if (!item) {
         set.status = 404;
         return { error: 'Item not found' };
@@ -32,18 +41,9 @@ export const adminContentRoutes = new Elysia({ prefix: '/api/admin/tenants/:tena
       return { error: error.message };
     }
   })
-  .get('/:modelSlug/singleton', ({ params, set }) => {
+  .post('/api/admin/tenants/:slug/content/:modelSlug', ({ params, body, set }) => {
     try {
-      const item = findSingletonContent(params.tenantSlug, params.modelSlug);
-      return { item };
-    } catch (error: any) {
-      set.status = 400;
-      return { error: error.message };
-    }
-  })
-  .post('/:modelSlug', ({ params, body, set }) => {
-    try {
-      const id = createContentItem(params.tenantSlug, params.modelSlug, body);
+      const id = createContentItem(params.slug, params.modelSlug, body);
       return { id };
     } catch (error: any) {
       set.status = 400;
@@ -52,9 +52,9 @@ export const adminContentRoutes = new Elysia({ prefix: '/api/admin/tenants/:tena
   }, {
     body: t.Any(),
   })
-  .patch('/:modelSlug/:itemId', ({ params, body, set }) => {
+  .patch('/api/admin/tenants/:slug/content/:modelSlug/:itemId', ({ params, body, set }) => {
     try {
-      updateContentItem(params.tenantSlug, params.modelSlug, parseInt(params.itemId), body);
+      updateContentItem(params.slug, params.modelSlug, parseInt(params.itemId), body);
       return { success: true };
     } catch (error: any) {
       set.status = 400;
@@ -63,9 +63,9 @@ export const adminContentRoutes = new Elysia({ prefix: '/api/admin/tenants/:tena
   }, {
     body: t.Any(),
   })
-  .put('/:modelSlug', ({ params, body, set }) => {
+  .put('/api/admin/tenants/:slug/content/:modelSlug', ({ params, body, set }) => {
     try {
-      updateSingletonContent(params.tenantSlug, params.modelSlug, body);
+      updateSingletonContent(params.slug, params.modelSlug, body);
       return { success: true };
     } catch (error: any) {
       set.status = 400;
@@ -74,9 +74,9 @@ export const adminContentRoutes = new Elysia({ prefix: '/api/admin/tenants/:tena
   }, {
     body: t.Any(),
   })
-  .delete('/:modelSlug/:itemId', ({ params, set }) => {
+  .delete('/api/admin/tenants/:slug/content/:modelSlug/:itemId', ({ params, set }) => {
     try {
-      deleteContentItem(params.tenantSlug, params.modelSlug, parseInt(params.itemId));
+      deleteContentItem(params.slug, params.modelSlug, parseInt(params.itemId));
       return { success: true };
     } catch (error: any) {
       set.status = 400;
