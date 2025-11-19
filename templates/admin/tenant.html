@@ -46,12 +46,26 @@
           <h2 class="text-3xl font-bold">Content Models</h2>
           <p class="text-base-content/70">Define your content structure</p>
         </div>
-        <button class="btn btn-primary gap-2" onclick="showCreateModelModal()">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          Create Model
-        </button>
+        <div class="flex gap-2">
+          <button class="btn btn-outline gap-2" onclick="copyLLMPrompt()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            </svg>
+            LLM Prompt
+          </button>
+          <button class="btn btn-outline gap-2" onclick="showImportModelModal()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            Import Model
+          </button>
+          <button class="btn btn-primary gap-2" onclick="showCreateModelModal()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Create Model
+          </button>
+        </div>
       </div>
 
       <div id="models-list" class="space-y-4">
@@ -116,6 +130,51 @@
       </div>
     </form>
   </div>
+</dialog>
+
+<!-- Import Model Modal -->
+<dialog id="import-model-modal" class="modal">
+  <div class="modal-box max-w-2xl">
+    <h3 class="font-bold text-lg mb-4">Import Content Model from JSON</h3>
+    <form id="import-model-form" class="space-y-4">
+      <div class="alert alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="text-sm">
+          <p>Use the <strong>LLM Prompt</strong> button to generate a prompt, then paste it into an AI assistant.</p>
+          <p>Describe your content needs, and the AI will generate the JSON to paste here.</p>
+        </div>
+      </div>
+
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-semibold">Content Model JSON</span>
+        </label>
+        <textarea
+          id="import-json"
+          class="textarea textarea-bordered font-mono text-sm h-64"
+          placeholder='Paste JSON here...'
+          required
+        ></textarea>
+        <label class="label">
+          <span class="label-text-alt">JSON format: {"slug": "...", "name": "...", "type": "collection|singleton", "fields": [...]}</span>
+        </label>
+      </div>
+
+      <div id="import-error" class="alert alert-error hidden">
+        <span id="import-error-text"></span>
+      </div>
+
+      <div class="modal-action">
+        <button type="button" class="btn" onclick="closeImportModelModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Import Model</button>
+      </div>
+    </form>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
 </dialog>
 
 <!-- Content List Modal -->
@@ -272,6 +331,75 @@
     document.getElementById('create-model-form').reset();
   }
 
+  function showImportModelModal() {
+    document.getElementById('import-model-modal').showModal();
+  }
+
+  function closeImportModelModal() {
+    document.getElementById('import-model-modal').close();
+    document.getElementById('import-model-form').reset();
+    document.getElementById('import-error').classList.add('hidden');
+  }
+
+  async function copyLLMPrompt() {
+    const prompt = `You are a content model generator for a headless CMS. Generate a content model in JSON format based on the user's description.
+
+The JSON should follow this exact structure:
+{
+  "slug": "lowercase-slug-with-hyphens",
+  "name": "Display Name",
+  "type": "collection" or "singleton",
+  "fields": [
+    {
+      "name": "field_name",
+      "type": "text|textarea|markdown|image|date|link|badges",
+      "required": true or false,
+      "label": "Field Label (optional)",
+      "maxLength": 100 (optional, for text/textarea only)
+    }
+  ]
+}
+
+Field types:
+- text: Single-line text input
+- textarea: Multi-line text
+- markdown: Markdown editor
+- image: Image URL (users upload to media library)
+- date: Date picker
+- link: URL with optional text
+- badges: Comma-separated tags
+
+Model types:
+- collection: Multiple items (e.g., blog posts, products)
+- singleton: Single item (e.g., site settings, about page)
+
+Instructions:
+1. Listen to the user's content model description
+2. Generate ONLY the JSON (no explanations, no markdown code blocks)
+3. Use appropriate field types
+4. Set required fields appropriately
+5. Use descriptive labels
+
+Now, describe the content model you need:`;
+
+    try {
+      await navigator.clipboard.writeText(prompt);
+      const btn = event.target.closest('button');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!';
+      btn.classList.add('btn-success');
+      btn.classList.remove('btn-outline');
+
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline');
+      }, 3000);
+    } catch (error) {
+      alert('Failed to copy prompt. Please try again.');
+    }
+  }
+
   function addField() {
     const id = fieldCounter++;
     const container = document.getElementById('fields-list');
@@ -355,6 +483,59 @@
     if (response.ok) {
       closeCreateModelModal();
       loadModels();
+    }
+  });
+
+  document.getElementById('import-model-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const jsonText = document.getElementById('import-json').value.trim();
+
+    try {
+      // Parse and validate JSON
+      const modelData = JSON.parse(jsonText);
+
+      // Validate required fields
+      if (!modelData.slug || !modelData.name || !modelData.type || !modelData.fields) {
+        throw new Error('Missing required fields: slug, name, type, or fields');
+      }
+
+      if (!Array.isArray(modelData.fields)) {
+        throw new Error('Fields must be an array');
+      }
+
+      if (!['collection', 'singleton'].includes(modelData.type)) {
+        throw new Error('Type must be "collection" or "singleton"');
+      }
+
+      // Validate each field
+      for (const field of modelData.fields) {
+        if (!field.name || !field.type) {
+          throw new Error('Each field must have name and type');
+        }
+        const validTypes = ['text', 'textarea', 'markdown', 'image', 'date', 'link', 'badges'];
+        if (!validTypes.includes(field.type)) {
+          throw new Error(`Invalid field type: ${field.type}`);
+        }
+      }
+
+      // Send to API
+      const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/models`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(modelData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        closeImportModelModal();
+        loadModels();
+      } else {
+        throw new Error(data.error || 'Failed to create model');
+      }
+    } catch (error) {
+      document.getElementById('import-error-text').textContent = error.message;
+      document.getElementById('import-error').classList.remove('hidden');
     }
   });
 
