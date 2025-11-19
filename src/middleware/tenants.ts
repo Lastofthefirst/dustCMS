@@ -1,9 +1,10 @@
 import { Elysia } from 'elysia';
 import { getTenant } from '../db/system';
+import { validateTenantSession } from '../services/auth';
 import { config } from '../config';
 
 export function tenantMiddleware(app: Elysia): Elysia {
-  return app.derive(({ request }) => {
+  return app.derive(({ request, cookie }) => {
     const host = request.headers.get('host') || '';
     const parts = host.split('.');
 
@@ -26,9 +27,17 @@ export function tenantMiddleware(app: Elysia): Elysia {
 
     const tenant = tenantSlug ? getTenant(tenantSlug) : null;
 
+    // Check tenant authentication
+    const tenantSessionCookie = cookie['tenant-session']?.value;
+    const isTenantAuthenticated = tenantSlug && tenantSessionCookie
+      ? validateTenantSession(tenantSessionCookie, tenantSlug)
+      : false;
+
     return {
       tenantSlug,
       tenant,
+      isTenantAuthenticated,
+      tenantSessionToken: tenantSessionCookie || null,
     };
   });
 }

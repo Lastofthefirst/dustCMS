@@ -1,30 +1,31 @@
 // Core type definitions for dustCMS
 
 export interface SuperAdmin {
-  email: string;
+  username: string;
   password_hash: string;
 }
 
 export interface Tenant {
   slug: string;
   name: string;
-  password: string; // plaintext for clients
+  password: string; // auto-generated passphrase
   created_at: number;
 }
 
 export interface Session {
   token: string;
-  email: string;
+  username: string;
   created_at: number;
 }
 
-export type FieldType = 'text' | 'textarea' | 'markdown' | 'image' | 'date' | 'link';
+export type FieldType = 'text' | 'textarea' | 'markdown' | 'image' | 'date' | 'link' | 'badges';
 
 export interface Field {
   name: string;
   type: FieldType;
   required?: boolean;
   label?: string;
+  maxLength?: number; // for text fields
 }
 
 export interface ContentModel {

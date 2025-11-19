@@ -46,12 +46,26 @@
           <h2 class="text-3xl font-bold">Content Models</h2>
           <p class="text-base-content/70">Define your content structure</p>
         </div>
-        <button class="btn btn-primary gap-2" onclick="showCreateModelModal()">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          Create Model
-        </button>
+        <div class="flex gap-2">
+          <button class="btn btn-outline gap-2" onclick="copyLLMPrompt()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            </svg>
+            LLM Prompt
+          </button>
+          <button class="btn btn-outline gap-2" onclick="showImportModelModal()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            Import Model
+          </button>
+          <button class="btn btn-primary gap-2" onclick="showCreateModelModal()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Create Model
+          </button>
+        </div>
       </div>
 
       <div id="models-list" class="space-y-4">
@@ -118,18 +132,85 @@
   </div>
 </dialog>
 
+<!-- Import Model Modal -->
+<dialog id="import-model-modal" class="modal">
+  <div class="modal-box max-w-2xl">
+    <h3 class="font-bold text-lg mb-4">Import Content Model from JSON</h3>
+    <form id="import-model-form" class="space-y-4">
+      <div class="alert alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="text-sm">
+          <p>Use the <strong>LLM Prompt</strong> button to generate a prompt, then paste it into an AI assistant.</p>
+          <p>Describe your content needs, and the AI will generate the JSON to paste here.</p>
+        </div>
+      </div>
+
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-semibold">Content Model JSON</span>
+        </label>
+        <textarea
+          id="import-json"
+          class="textarea textarea-bordered font-mono text-sm h-64"
+          placeholder='Paste JSON here...'
+          required
+        ></textarea>
+        <label class="label">
+          <span class="label-text-alt">JSON format: {"slug": "...", "name": "...", "type": "collection|singleton", "fields": [...]}</span>
+        </label>
+      </div>
+
+      <div id="import-error" class="alert alert-error hidden">
+        <span id="import-error-text"></span>
+      </div>
+
+      <div class="modal-action">
+        <button type="button" class="btn" onclick="closeImportModelModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Import Model</button>
+      </div>
+    </form>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
+
+<!-- Content List Modal -->
+<dialog id="content-list-modal" class="modal">
+  <div class="modal-box max-w-5xl max-h-[90vh]">
+    <h3 class="font-bold text-2xl mb-4" id="content-list-title"></h3>
+    <div class="flex justify-between items-center mb-4">
+      <p class="text-base-content/70" id="content-list-subtitle"></p>
+      <button class="btn btn-primary btn-sm gap-2" onclick="createNewContent()" id="create-content-btn">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Add Item
+      </button>
+    </div>
+    <div id="content-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
+    <div class="modal-action">
+      <button class="btn" onclick="closeContentListModal()">Close</button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
 <!-- Edit Content Modal -->
 <dialog id="edit-content-modal" class="modal">
-  <div class="modal-box max-w-2xl">
+  <div class="modal-box max-w-2xl max-h-[90vh] overflow-y-auto">
     <h3 class="font-bold text-lg mb-4" id="edit-content-title">Edit Content</h3>
     <form id="edit-content-form" class="space-y-4">
-      <div id="content-fields"></div>
+      <div id="content-fields" class="space-y-4"></div>
       <div class="modal-action">
         <button type="button" class="btn" onclick="closeEditContentModal()">Cancel</button>
         <button type="submit" class="btn btn-primary">Save</button>
       </div>
     </form>
   </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
 </dialog>
 
 <script>
@@ -163,7 +244,7 @@
       return;
     }
     list.innerHTML = models.map(model => `
-      <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"><div class="card-body"><h3 class="card-title">${escapeHtml(model.name)}</h3><p class="text-sm text-base-content/70">${model.type === 'collection' ? 'Collection' : 'Singleton'}</p><div class="flex gap-2 mt-4"><button class="btn btn-sm btn-primary flex-1" onclick="event.stopPropagation(); openContentEditor('${model.slug}')">
+      <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer" onclick="openContentEditor('${model.slug}')">
         <div class="card-body">
           <h3 class="card-title">${escapeHtml(model.name)}</h3>
           <p class="text-sm text-base-content/70">${model.type === 'collection' ? 'Collection' : 'Singleton'}</p>
@@ -183,7 +264,7 @@
       <div class="card bg-base-100 shadow-lg">
         <div class="card-body">
           <div class="flex justify-between items-start">
-            <div>
+            <div class="flex-1">
               <h3 class="card-title">${escapeHtml(model.name)}</h3>
               <p class="text-sm text-base-content/70 font-mono">${escapeHtml(model.slug)}</p>
               <div class="mt-2"><span class="badge">${model.type}</span></div>
@@ -191,7 +272,20 @@
                 ${model.fields.map(f => `<div class="text-sm"><span class="badge badge-sm badge-ghost">${f.type}</span> ${escapeHtml(f.name)}</div>`).join('')}
               </div>
             </div>
-            <button class="btn btn-error btn-sm btn-outline" onclick="deleteModel('${model.slug}')">Delete</button>
+            <div class="flex flex-col gap-2">
+              <button class="btn btn-primary btn-sm gap-2" onclick="showIntegrationModal('${model.slug}')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                API Code
+              </button>
+              <button class="btn btn-error btn-sm btn-outline" onclick="deleteModel('${model.slug}')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -237,27 +331,118 @@
     document.getElementById('create-model-form').reset();
   }
 
+  function showImportModelModal() {
+    document.getElementById('import-model-modal').showModal();
+  }
+
+  function closeImportModelModal() {
+    document.getElementById('import-model-modal').close();
+    document.getElementById('import-model-form').reset();
+    document.getElementById('import-error').classList.add('hidden');
+  }
+
+  async function copyLLMPrompt() {
+    const prompt = `You are a content model generator for a headless CMS. Generate a content model in JSON format based on the user's description.
+
+The JSON should follow this exact structure:
+{
+  "slug": "lowercase-slug-with-hyphens",
+  "name": "Display Name",
+  "type": "collection" or "singleton",
+  "fields": [
+    {
+      "name": "field_name",
+      "type": "text|textarea|markdown|image|date|link|badges",
+      "required": true or false,
+      "label": "Field Label (optional)",
+      "maxLength": 100 (optional, for text/textarea only)
+    }
+  ]
+}
+
+Field types:
+- text: Single-line text input
+- textarea: Multi-line text
+- markdown: Markdown editor
+- image: Image URL (users upload to media library)
+- date: Date picker
+- link: URL with optional text
+- badges: Comma-separated tags
+
+Model types:
+- collection: Multiple items (e.g., blog posts, products)
+- singleton: Single item (e.g., site settings, about page)
+
+Instructions:
+1. Listen to the user's content model description
+2. Generate ONLY the JSON (no explanations, no markdown code blocks)
+3. Use appropriate field types
+4. Set required fields appropriately
+5. Use descriptive labels
+
+Now, describe the content model you need:`;
+
+    try {
+      await navigator.clipboard.writeText(prompt);
+      const btn = event.target.closest('button');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!';
+      btn.classList.add('btn-success');
+      btn.classList.remove('btn-outline');
+
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline');
+      }, 3000);
+    } catch (error) {
+      alert('Failed to copy prompt. Please try again.');
+    }
+  }
+
   function addField() {
     const id = fieldCounter++;
     const container = document.getElementById('fields-list');
     const div = document.createElement('div');
-    div.className = 'grid grid-cols-3 gap-2';
+    div.className = 'space-y-2 p-3 bg-base-200 rounded-lg';
     div.innerHTML = `
-      <input type="text" class="input input-sm input-bordered" placeholder="Field name" data-field-name="${id}" required />
-      <select class="select select-sm select-bordered" data-field-type="${id}">
-        <option value="text">Text</option>
-        <option value="textarea">Textarea</option>
-        <option value="markdown">Markdown</option>
-        <option value="image">Image</option>
-        <option value="date">Date</option>
-        <option value="link">Link</option>
-      </select>
-      <label class="label cursor-pointer justify-start gap-2">
-        <input type="checkbox" class="checkbox checkbox-sm" data-field-required="${id}" />
-        <span class="label-text text-xs">Required</span>
-      </label>
+      <div class="grid grid-cols-3 gap-2">
+        <input type="text" class="input input-sm input-bordered" placeholder="Field name" data-field-name="${id}" required />
+        <select class="select select-sm select-bordered" data-field-type="${id}" onchange="toggleCharLimit(${id})">
+          <option value="text">Text</option>
+          <option value="textarea">Textarea</option>
+          <option value="markdown">Markdown</option>
+          <option value="image">Image</option>
+          <option value="date">Date</option>
+          <option value="link">Link</option>
+          <option value="badges">Badges (Tags)</option>
+        </select>
+        <label class="label cursor-pointer justify-start gap-2">
+          <input type="checkbox" class="checkbox checkbox-sm" data-field-required="${id}" />
+          <span class="label-text text-xs">Required</span>
+        </label>
+      </div>
+      <div class="hidden" data-char-limit-container="${id}">
+        <label class="label py-1">
+          <span class="label-text text-xs">Character Limit (optional)</span>
+        </label>
+        <input type="number" class="input input-sm input-bordered w-full" placeholder="e.g., 100" min="1" data-field-maxlength="${id}" />
+      </div>
     `;
     container.appendChild(div);
+  }
+
+  function toggleCharLimit(fieldId) {
+    const typeSelect = document.querySelector(`[data-field-type="${fieldId}"]`);
+    const charLimitContainer = document.querySelector(`[data-char-limit-container="${fieldId}"]`);
+    const fieldType = typeSelect.value;
+
+    // Show character limit input for text and textarea fields
+    if (fieldType === 'text' || fieldType === 'textarea') {
+      charLimitContainer.classList.remove('hidden');
+    } else {
+      charLimitContainer.classList.add('hidden');
+    }
   }
 
   document.getElementById('create-model-form').addEventListener('submit', async (e) => {
@@ -271,13 +456,21 @@
       const nameInput = document.querySelector(`[data-field-name="${i}"]`);
       const typeSelect = document.querySelector(`[data-field-type="${i}"]`);
       const requiredCheckbox = document.querySelector(`[data-field-required="${i}"]`);
+      const maxLengthInput = document.querySelector(`[data-field-maxlength="${i}"]`);
 
       if (nameInput && nameInput.value) {
-        fields.push({
+        const field = {
           name: nameInput.value.trim(),
           type: typeSelect.value,
           required: requiredCheckbox.checked
-        });
+        };
+
+        // Add maxLength if specified for text/textarea fields
+        if (maxLengthInput && maxLengthInput.value && (typeSelect.value === 'text' || typeSelect.value === 'textarea')) {
+          field.maxLength = parseInt(maxLengthInput.value, 10);
+        }
+
+        fields.push(field);
       }
     }
 
@@ -293,6 +486,59 @@
     }
   });
 
+  document.getElementById('import-model-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const jsonText = document.getElementById('import-json').value.trim();
+
+    try {
+      // Parse and validate JSON
+      const modelData = JSON.parse(jsonText);
+
+      // Validate required fields
+      if (!modelData.slug || !modelData.name || !modelData.type || !modelData.fields) {
+        throw new Error('Missing required fields: slug, name, type, or fields');
+      }
+
+      if (!Array.isArray(modelData.fields)) {
+        throw new Error('Fields must be an array');
+      }
+
+      if (!['collection', 'singleton'].includes(modelData.type)) {
+        throw new Error('Type must be "collection" or "singleton"');
+      }
+
+      // Validate each field
+      for (const field of modelData.fields) {
+        if (!field.name || !field.type) {
+          throw new Error('Each field must have name and type');
+        }
+        const validTypes = ['text', 'textarea', 'markdown', 'image', 'date', 'link', 'badges'];
+        if (!validTypes.includes(field.type)) {
+          throw new Error(`Invalid field type: ${field.type}`);
+        }
+      }
+
+      // Send to API
+      const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/models`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(modelData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        closeImportModelModal();
+        loadModels();
+      } else {
+        throw new Error(data.error || 'Failed to create model');
+      }
+    } catch (error) {
+      document.getElementById('import-error-text').textContent = error.message;
+      document.getElementById('import-error').classList.remove('hidden');
+    }
+  });
+
   async function deleteModel(slug) {
     if (!confirm(`Delete model "${slug}"? This will delete all content.`)) return;
     await fetch(`/api/admin/tenants/${TENANT_SLUG}/models/${slug}`, { method: 'DELETE' });
@@ -303,12 +549,262 @@
     currentModel = models.find(m => m.slug === modelSlug);
     if (!currentModel) return;
 
-    const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${modelSlug}`);
-    const data = await response.json();
-    const items = data.items || [];
+    document.getElementById('content-list-title').textContent = currentModel.name;
+    document.getElementById('content-list-subtitle').textContent = currentModel.type === 'singleton' ? 'Single item' : 'Multiple items';
+    document.getElementById('create-content-btn').style.display = currentModel.type === 'singleton' ? 'none' : 'block';
 
-    // For now, just show an alert - in a full implementation, this would show a content editor
-    alert(`Content editor for ${currentModel.name}. You have ${items.length} items. Full editor coming soon!`);
+    await loadContentItems();
+    document.getElementById('content-list-modal').showModal();
+  }
+
+  async function loadContentItems() {
+    const endpoint = currentModel.type === 'singleton'
+      ? `/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/singleton`
+      : `/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}`;
+
+    const response = await fetch(endpoint);
+    const data = await response.json();
+
+    if (currentModel.type === 'singleton') {
+      renderSingletonContent(data.item);
+    } else {
+      renderContentList(data.items || []);
+    }
+  }
+
+  function renderContentList(items) {
+    const list = document.getElementById('content-list');
+    if (items.length === 0) {
+      list.innerHTML = '<div class="text-center py-12 text-base-content/50">No content yet. Create your first item!</div>';
+      return;
+    }
+
+    list.innerHTML = items.map(item => {
+      const preview = currentModel.fields.slice(0, 2).map(f => {
+        const value = item[f.name];
+        if (!value) return '';
+        if (f.type === 'image') return `<img src="${value}" class="w-12 h-12 object-cover rounded" />`;
+        if (f.type === 'badges') return `<div class="flex gap-1">${value.split(',').slice(0, 3).map(b => `<span class="badge badge-sm">${escapeHtml(b.trim())}</span>`).join('')}</div>`;
+        return `<span class="text-sm">${escapeHtml(String(value).substring(0, 50))}</span>`;
+      }).join(' ');
+
+      return `
+        <div class="card bg-base-200 hover:bg-base-300 transition-colors">
+          <div class="card-body p-4 flex flex-row items-center justify-between">
+            <div class="flex gap-4 items-center flex-1">
+              ${preview}
+            </div>
+            <div class="flex gap-2">
+              <button class="btn btn-sm btn-ghost" onclick="editContent(${item.id})">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </button>
+              <button class="btn btn-sm btn-error btn-ghost" onclick="deleteContent(${item.id})">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderSingletonContent(item) {
+    const list = document.getElementById('content-list');
+    const hasContent = item && Object.keys(item).length > 1; // More than just ID
+
+    list.innerHTML = `
+      <div class="text-center py-8">
+        <button class="btn btn-primary btn-lg" onclick="editContent(null)">
+          ${hasContent ? 'Edit Content' : 'Add Content'}
+        </button>
+      </div>
+    `;
+  }
+
+  function createNewContent() {
+    currentItem = null;
+    showEditContentModal();
+  }
+
+  async function editContent(itemId) {
+    if (currentModel.type === 'singleton') {
+      const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/singleton`);
+      const data = await response.json();
+      currentItem = data.item || {};
+    } else if (itemId) {
+      const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/${itemId}`);
+      const data = await response.json();
+      currentItem = data.item;
+    } else {
+      currentItem = {};
+    }
+
+    showEditContentModal();
+  }
+
+  function showEditContentModal() {
+    const isNew = !currentItem || !currentItem.id;
+    document.getElementById('edit-content-title').textContent =
+      isNew ? `Add ${currentModel.name}` : `Edit ${currentModel.name}`;
+
+    const fieldsContainer = document.getElementById('content-fields');
+    fieldsContainer.innerHTML = currentModel.fields.map(field => {
+      const value = currentItem[field.name] || '';
+      return generateFieldInput(field, value);
+    }).join('');
+
+    document.getElementById('edit-content-modal').showModal();
+  }
+
+  function generateFieldInput(field, value) {
+    const required = field.required ? 'required' : '';
+    const label = field.label || field.name;
+
+    switch (field.type) {
+      case 'text':
+        const maxLengthAttr = field.maxLength ? `maxlength="${field.maxLength}"` : '';
+        const charCountId = `char-count-${field.name}`;
+        const currentLength = value ? String(value).length : 0;
+        const showCounter = field.maxLength ? '' : 'hidden';
+        return `
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">${escapeHtml(label)}</span>
+              <span class="label-text-alt ${showCounter}" id="${charCountId}">${currentLength}${field.maxLength ? `/${field.maxLength}` : ''}</span>
+            </label>
+            <input type="text" name="${field.name}" class="input input-bordered" value="${escapeHtml(value)}"
+              ${required} ${maxLengthAttr}
+              oninput="updateCharCount('${field.name}', ${field.maxLength || 0})" />
+          </div>
+        `;
+      case 'textarea':
+        const textareaMaxLengthAttr = field.maxLength ? `maxlength="${field.maxLength}"` : '';
+        const textareaCharCountId = `char-count-${field.name}`;
+        const textareaCurrentLength = value ? String(value).length : 0;
+        const textareaShowCounter = field.maxLength ? '' : 'hidden';
+        return `
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">${escapeHtml(label)}</span>
+              <span class="label-text-alt ${textareaShowCounter}" id="${textareaCharCountId}">${textareaCurrentLength}${field.maxLength ? `/${field.maxLength}` : ''}</span>
+            </label>
+            <textarea name="${field.name}" class="textarea textarea-bordered h-24" ${required} ${textareaMaxLengthAttr}
+              oninput="updateCharCount('${field.name}', ${field.maxLength || 0})">${escapeHtml(value)}</textarea>
+          </div>
+        `;
+      case 'markdown':
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <textarea name="${field.name}" class="textarea textarea-bordered font-mono h-48" ${required}>${escapeHtml(value)}</textarea>
+            <label class="label"><span class="label-text-alt">Supports Markdown formatting</span></label>
+          </div>
+        `;
+      case 'image':
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <input type="text" name="${field.name}" class="input input-bordered" value="${escapeHtml(value)}" placeholder="/images/filename.webp" ${required} />
+            <label class="label"><span class="label-text-alt">Upload images in the Media Library tab</span></label>
+          </div>
+        `;
+      case 'date':
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <input type="date" name="${field.name}" class="input input-bordered" value="${value}" ${required} />
+          </div>
+        `;
+      case 'link':
+        const linkData = value ? (typeof value === 'string' ? JSON.parse(value) : value) : {url: '', text: ''};
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <input type="url" name="${field.name}_url" class="input input-bordered mb-2" placeholder="https://example.com" value="${escapeHtml(linkData.url || '')}" ${required} />
+            <input type="text" name="${field.name}_text" class="input input-bordered" placeholder="Link text (optional)" value="${escapeHtml(linkData.text || '')}" />
+          </div>
+        `;
+      case 'badges':
+        return `
+          <div class="form-control">
+            <label class="label"><span class="label-text font-semibold">${escapeHtml(label)}</span></label>
+            <input type="text" name="${field.name}" class="input input-bordered" value="${escapeHtml(value)}" placeholder="tag1, tag2, tag3" ${required} />
+            <label class="label"><span class="label-text-alt">Comma-separated tags</span></label>
+          </div>
+        `;
+      default:
+        return '';
+    }
+  }
+
+  document.getElementById('edit-content-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {};
+
+    currentModel.fields.forEach(field => {
+      if (field.type === 'link') {
+        const url = formData.get(`${field.name}_url`);
+        const text = formData.get(`${field.name}_text`);
+        data[field.name] = JSON.stringify({ url, text });
+      } else {
+        data[field.name] = formData.get(field.name);
+      }
+    });
+
+    try {
+      let response;
+      if (currentModel.type === 'singleton') {
+        response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } else if (currentItem && currentItem.id) {
+        response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/${currentItem.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } else {
+        response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      }
+
+      if (response.ok) {
+        closeEditContentModal();
+        await loadContentItems();
+      }
+    } catch (error) {
+      alert('Failed to save content');
+    }
+  });
+
+  async function deleteContent(itemId) {
+    if (!confirm('Delete this item?')) return;
+
+    const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/${itemId}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      await loadContentItems();
+    }
+  }
+
+  function closeContentListModal() {
+    document.getElementById('content-list-modal').close();
+  }
+
+  function closeEditContentModal() {
+    document.getElementById('edit-content-modal').close();
   }
 
   async function uploadImage(event) {
@@ -332,6 +828,22 @@
   function copyImageUrl(filename) {
     navigator.clipboard.writeText(`/images/${filename}`);
     alert('Image URL copied!');
+  }
+
+  function updateCharCount(fieldName, maxLength) {
+    const input = document.querySelector(`[name="${fieldName}"]`);
+    const counter = document.getElementById(`char-count-${fieldName}`);
+    if (input && counter && maxLength > 0) {
+      const currentLength = input.value.length;
+      counter.textContent = `${currentLength}/${maxLength}`;
+
+      // Add warning color if approaching limit
+      if (currentLength >= maxLength * 0.9) {
+        counter.classList.add('text-warning');
+      } else {
+        counter.classList.remove('text-warning');
+      }
+    }
   }
 
   async function logout() {

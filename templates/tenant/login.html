@@ -1,8 +1,10 @@
-<div class="min-h-screen flex items-center justify-center px-4">
+<div class="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-primary/10 to-secondary/10">
   <div class="card w-full max-w-md bg-base-100 shadow-2xl fade-in">
     <div class="card-body">
-      <h1 class="card-title text-3xl font-bold mb-2">Super Admin Login</h1>
-      <p class="text-base-content/70 mb-6">Sign in to manage your tenants</p>
+      <div class="text-center mb-6">
+        <h1 class="text-4xl font-bold mb-2">{{TENANT_NAME}}</h1>
+        <p class="text-base-content/70">Content Management</p>
+      </div>
 
       <form onsubmit="handleLogin(event)" class="space-y-4">
         <div class="form-control">
@@ -13,7 +15,8 @@
             type="text"
             id="username"
             class="input input-bordered w-full"
-            placeholder="admin"
+            placeholder="Enter username"
+            value="{{TENANT_SLUG}}"
             required
           />
         </div>
@@ -32,6 +35,9 @@
         </div>
 
         <div id="error-message" class="alert alert-error hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
           <span id="error-text"></span>
         </div>
 
@@ -39,11 +45,18 @@
           Sign In
         </button>
       </form>
+
+      <div class="divider text-sm opacity-50">dustCMS</div>
+      <p class="text-center text-xs text-base-content/50">
+        Powered by dustCMS
+      </p>
     </div>
   </div>
 </div>
 
 <script>
+  const TENANT_SLUG = '{{TENANT_SLUG}}';
+
   async function handleLogin(event) {
     event.preventDefault();
 
@@ -55,7 +68,7 @@
     btn.disabled = true;
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/tenant/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -64,7 +77,7 @@
       const data = await response.json();
 
       if (response.ok) {
-        window.location.href = '/admin';
+        window.location.href = '/';
       } else {
         showError(data.error || 'Invalid credentials');
         btn.classList.remove('loading');

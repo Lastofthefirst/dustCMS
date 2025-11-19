@@ -4,7 +4,7 @@ import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { config } from './config';
 import { startServer } from './server';
-import { getSuperAdmin, createSuperAdmin } from './db/system';
+import { getSuperAdmin, createSuperAdmin, updateSuperAdmin } from './db/system';
 import { hashPassword } from './services/auth';
 
 async function ensureDataDirectory() {
@@ -26,15 +26,23 @@ async function runSetupWizard() {
 `);
 
   const admin = getSuperAdmin();
-  if (admin) {
-    console.log('✓ Setup already completed!');
-    console.log(`✓ Super admin: ${admin.email}`);
-    console.log(`✓ Base domain: ${config.baseDomain}`);
-    console.log('\nRun without "setup" argument to start the server.');
-    process.exit(0);
-  }
+  const isUpdate = admin !== null;
 
-  console.log('Setting up dustCMS for production...\n');
+  if (isUpdate) {
+    console.log('✓ Setup already completed!');
+    console.log(`✓ Current admin: ${admin.username}`);
+    console.log(`✓ Base domain: ${config.baseDomain}`);
+    console.log('');
+
+    const updateChoice = prompt('Update admin credentials? (y/n):', { default: 'n' });
+    if (updateChoice?.toLowerCase() !== 'y') {
+      console.log('\nNo changes made. Run without "setup" argument to start the server.');
+      process.exit(0);
+    }
+    console.log('\n⚠️  Updating admin credentials (tenant data will NOT be affected)\n');
+  } else {
+    console.log('Setting up dustCMS for production...\n');
+  }
 
   // Prompt for base domain
   console.log('Base domain (e.g., cms.example.com):');
@@ -48,10 +56,10 @@ async function runSetupWizard() {
 
   console.log('');
 
-  // Prompt for email
-  const email = prompt('Super admin email:');
-  if (!email) {
-    console.error('❌ Email is required');
+  // Prompt for username
+  const username = prompt('Super admin username:');
+  if (!username) {
+    console.error('❌ Username is required');
     process.exit(1);
   }
 
@@ -64,18 +72,28 @@ async function runSetupWizard() {
 
   console.log('');
 
-  // Create super admin
+  // Create or update super admin
   const passwordHash = await hashPassword(password);
-  createSuperAdmin(email, passwordHash);
+  if (isUpdate) {
+    updateSuperAdmin(username, passwordHash);
+    console.log('✓ Admin credentials updated successfully!');
+  } else {
+    createSuperAdmin(username, passwordHash);
+    console.log('✓ Setup completed successfully!');
+  }
 
-  console.log('✓ Setup completed successfully!');
-  console.log(`✓ Super admin: ${email}`);
+  console.log(`✓ Super admin: ${username}`);
   console.log(`✓ Base domain: ${baseDomain}`);
-  console.log(`\n📝 Next steps:`);
-  console.log(`   1. Start server: bun run src/main.ts`);
-  console.log(`   2. Login at: http://localhost:${config.port}/admin/login`);
-  console.log(`   3. Create your first tenant`);
-  console.log(`\n💡 For production: ./build.sh to create standalone binary`);
+
+  if (!isUpdate) {
+    console.log(`\n📝 Next steps:`);
+    console.log(`   1. Start server: bun run src/main.ts`);
+    console.log(`   2. Login at: http://localhost:${config.port}/admin/login`);
+    console.log(`   3. Create your first tenant`);
+    console.log(`\n💡 For production: ./build.sh to create standalone binary`);
+  } else {
+    console.log(`\n📝 You can now login with your new credentials!`);
+  }
 }
 
 async function main() {
