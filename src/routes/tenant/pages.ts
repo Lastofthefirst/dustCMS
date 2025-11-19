@@ -25,7 +25,7 @@ export function tenantPagesRoutes(app: Elysia): Elysia {
 
       if (isTenantAuthenticated) {
         set.redirect = '/';
-        return;
+        return '';
       }
 
       const template = loadTemplate('tenant/login.html');
@@ -34,8 +34,6 @@ export function tenantPagesRoutes(app: Elysia): Elysia {
         .replace(/{{TENANT_NAME}}/g, tenant.name);
 
       return renderTemplate(`${tenant.name} - Login`, `${tenant.name} Login`, content);
-    }, {
-      type: 'text/html',
     })
 
     // Tenant dashboard
@@ -44,12 +42,12 @@ export function tenantPagesRoutes(app: Elysia): Elysia {
       if (!tenant) {
         // No tenant in subdomain, redirect to admin
         set.redirect = '/admin/login';
-        return;
+        return '';
       }
 
       if (!isTenantAuthenticated) {
         set.redirect = '/login';
-        return;
+        return '';
       }
 
       const template = loadTemplate('tenant/dashboard.html');
@@ -63,7 +61,5 @@ export function tenantPagesRoutes(app: Elysia): Elysia {
         .replace(/{{BASE_URL}}/g, baseUrl);
 
       return renderTemplate(tenant.name, tenant.name, content);
-    }, {
-      type: 'text/html',
     });
 }
