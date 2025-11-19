@@ -2,6 +2,7 @@ import { mkdirSync, existsSync, rmSync } from 'fs';
 import { join } from 'path';
 import { config } from '../config';
 import { getTenants, getTenant, createTenant as dbCreateTenant, updateTenant as dbUpdateTenant, deleteTenant as dbDeleteTenant } from '../db/system';
+import { hashPassword } from './auth';
 import type { Tenant } from '../models/types';
 
 export function listTenants(): Tenant[] {
@@ -12,7 +13,7 @@ export function findTenant(slug: string): Tenant | null {
   return getTenant(slug);
 }
 
-export function createTenant(slug: string, name: string, password: string): Tenant {
+export async function createTenant(slug: string, name: string, password: string): Promise<Tenant> {
   // Validate slug format
   if (!/^[a-z0-9-]+$/.test(slug)) {
     throw new Error('Tenant slug must contain only lowercase letters, numbers, and hyphens');
@@ -34,8 +35,11 @@ export function createTenant(slug: string, name: string, password: string): Tena
     mkdirSync(imagesDir, { recursive: true });
   }
 
-  // Create tenant in database
-  return dbCreateTenant({ slug, name, password });
+  // Hash password before storing
+  const passwordHash = await hashPassword(password);
+
+  // Create tenant in database with hashed password
+  return dbCreateTenant({ slug, name, password: passwordHash });
 }
 
 export function updateTenant(slug: string, updates: Partial<Tenant>) {

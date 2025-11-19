@@ -16,6 +16,8 @@ import { imageRoutes } from './routes/admin/images';
 import { integrationRoutes } from './routes/admin/integration';
 import { publicContentRoutes } from './routes/api/content';
 import { uiRoutes } from './routes/ui/pages';
+import { tenantAuthRoutes } from './routes/tenant/auth';
+import { tenantPagesRoutes } from './routes/tenant/pages';
 import { getImagePath } from './services/image';
 
 export function createServer() {
@@ -43,6 +45,10 @@ export function createServer() {
 
     // Public API routes (no auth required, but have access to isAuthenticated)
     .use(publicContentRoutes)
+
+    // Tenant routes (for tenant-facing login and dashboard)
+    .use(tenantAuthRoutes)
+    .use(tenantPagesRoutes)
 
     // UI routes (now have access to isAuthenticated)
     .use(uiRoutes)

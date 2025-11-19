@@ -1,4 +1,4 @@
-import { getSuperAdmin, createSession, getSession, deleteSession } from '../db/system';
+import { getSuperAdmin, createSession, getSession, deleteSession, getTenant } from '../db/system';
 
 export async function hashPassword(password: string): Promise<string> {
   return await Bun.password.hash(password);
@@ -29,4 +29,24 @@ export function validateSession(token: string): boolean {
 
 export function logout(token: string) {
   deleteSession(token);
+}
+
+// Tenant authentication
+export async function authenticateTenant(tenantSlug: string, username: string, password: string): Promise<string | null> {
+  const tenant = getTenant(tenantSlug);
+  if (!tenant || tenant.slug !== username) {
+    return null;
+  }
+
+  const valid = await verifyPassword(password, tenant.password);
+  if (!valid) {
+    return null;
+  }
+
+  return createSession(`tenant:${tenantSlug}`);
+}
+
+export function validateTenantSession(token: string, tenantSlug: string): boolean {
+  const session = getSession(token);
+  return session !== null && session.username === `tenant:${tenantSlug}`;
 }

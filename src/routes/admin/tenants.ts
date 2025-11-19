@@ -13,12 +13,21 @@ export const tenantRoutes = new Elysia({ prefix: '/api/admin/tenants' })
     }
     return { tenant };
   })
-  .post('/', ({ body, set }) => {
+  .post('/', async ({ body, set }) => {
     try {
       // Auto-generate password if not provided
-      const password = body.password || generatePassphrase(4);
-      const tenant = createTenant(body.slug, body.name, password);
-      return { tenant };
+      const plaintextPassword = body.password || generatePassphrase(4);
+      const tenant = await createTenant(body.slug, body.name, plaintextPassword);
+
+      // Return tenant data with plaintext password for the welcome modal
+      // Note: The database stores the hashed version, but we return plaintext
+      // so the admin can share it with the client
+      return {
+        tenant: {
+          ...tenant,
+          password: plaintextPassword, // Override with plaintext for display only
+        },
+      };
     } catch (error: any) {
       set.status = 400;
       return { error: error.message };
