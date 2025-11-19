@@ -1,0 +1,6 @@
+[install]
+production = false
+
+[build]
+target = "bun"
+outdir = "./dist"
