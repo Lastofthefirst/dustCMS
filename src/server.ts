@@ -32,7 +32,22 @@ export function createServer() {
   // Apply auth middleware BEFORE routes so they can access isAuthenticated
   app = authMiddleware(app);
 
-  // Apply tenant routes that need access to tenant middleware context
+  app = app
+    // Public API routes (no auth required, but have access to isAuthenticated)
+    .use(publicContentRoutes)
+
+    // UI routes - these should come BEFORE tenant routes so tenant routes can override
+    .use(uiRoutes)
+
+    // Admin API routes (auth required)
+    .use(authRoutes)
+    .use(tenantRoutes)
+    .use(modelRoutes)
+    .use(adminContentRoutes)
+    .use(imageRoutes)
+    .use(integrationRoutes);
+
+  // Apply tenant routes AFTER UI routes so they take precedence for tenant subdomains
   app = tenantAuthRoutes(app);
   app = tenantPagesRoutes(app);
   app = tenantImageRoutes(app);
@@ -48,20 +63,6 @@ export function createServer() {
       const filepath = getImagePath(tenant.slug, params.filename);
       return Bun.file(filepath);
     })
-
-    // Public API routes (no auth required, but have access to isAuthenticated)
-    .use(publicContentRoutes)
-
-    // UI routes (now have access to isAuthenticated)
-    .use(uiRoutes)
-
-    // Admin API routes (auth required)
-    .use(authRoutes)
-    .use(tenantRoutes)
-    .use(modelRoutes)
-    .use(adminContentRoutes)
-    .use(imageRoutes)
-    .use(integrationRoutes)
 
     // Health check
     .get('/health', () => ({ status: 'ok' }))

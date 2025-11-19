@@ -23,8 +23,8 @@
 
   <!-- Main Content -->
   <div class="container mx-auto p-4 sm:p-6 max-w-7xl pb-20">
-    <!-- Tabs -->
-    <div role="tablist" class="tabs tabs-boxed mb-6 text-xs sm:text-sm">
+    <!-- Tabs (hidden when in content management view) -->
+    <div id="tabs-container" role="tablist" class="tabs tabs-boxed mb-6 text-xs sm:text-sm">
       <a role="tab" class="tab tab-active" id="models-tab" onclick="switchTab('models')">Content Models</a>
       <a role="tab" class="tab" id="images-tab" onclick="switchTab('images')">Media Library</a>
     </div>
@@ -81,6 +81,24 @@
 
       <div id="images-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
         <!-- Images will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Content Management Panel (hidden by default) -->
+    <div id="content-panel" class="hidden">
+      <!-- Back button -->
+      <div class="mb-6">
+        <button class="btn btn-ghost btn-sm gap-2" onclick="exitContentManagement()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Back to Models
+        </button>
+      </div>
+
+      <!-- Content management area -->
+      <div id="content-management-area">
+        <!-- Will be dynamically filled -->
       </div>
     </div>
   </div>
@@ -534,16 +552,362 @@ Now, describe the content model you need:`;
     loadModels();
   }
 
+  // Content management state (similar to tenant dashboard)
+  let contentView = 'list';  // 'list' or 'edit'
+  let contentItems = [];
+  let currentContentItem = null;
+
   async function openContentEditor(modelSlug) {
     currentModel = models.find(m => m.slug === modelSlug);
     if (!currentModel) return;
 
-    document.getElementById('content-list-title').textContent = currentModel.name;
-    document.getElementById('content-list-subtitle').textContent = currentModel.type === 'singleton' ? 'Single item' : 'Multiple items';
-    document.getElementById('create-content-btn').style.display = currentModel.type === 'singleton' ? 'none' : 'block';
+    // Hide tabs and other panels
+    document.getElementById('tabs-container').classList.add('hidden');
+    document.getElementById('models-panel').classList.add('hidden');
+    document.getElementById('images-panel').classList.add('hidden');
 
-    await loadContentItems();
-    document.getElementById('content-list-modal').showModal();
+    // Show content panel
+    document.getElementById('content-panel').classList.remove('hidden');
+
+    // Load content based on model type
+    if (currentModel.type === 'singleton') {
+      await loadSingletonForEdit();
+    } else {
+      await showContentListView();
+    }
+  }
+
+  function exitContentManagement() {
+    // Show tabs and models panel
+    document.getElementById('tabs-container').classList.remove('hidden');
+    document.getElementById('models-panel').classList.remove('hidden');
+
+    // Hide content panel
+    document.getElementById('content-panel').classList.add('hidden');
+
+    currentModel = null;
+    contentView = 'list';
+  }
+
+  async function loadSingletonForEdit() {
+    const endpoint = `/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/singleton`;
+    const response = await fetch(endpoint);
+    const data = await response.json();
+
+    currentContentItem = data.content || {};
+    contentView = 'edit';
+    renderContentEditView(true);
+  }
+
+  async function showContentListView() {
+    const endpoint = `/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}`;
+    const response = await fetch(endpoint);
+    const data = await response.json();
+
+    contentItems = data.items || [];
+    contentView = 'list';
+    renderContentListView();
+  }
+
+  function renderContentListView() {
+    const area = document.getElementById('content-management-area');
+
+    area.innerHTML = `
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold">${escapeHtml(currentModel.name)}</h2>
+            <p class="text-sm text-base-content/70">Collection - Multiple items</p>
+          </div>
+          <button class="btn btn-primary btn-sm sm:btn-md" onclick="createNewContentItem()">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span class="hidden sm:inline ml-1">New</span>
+          </button>
+        </div>
+      </div>
+
+      ${contentItems.length === 0 ? `
+        <div class="flex flex-col items-center justify-center min-h-[40vh] text-center px-4">
+          <svg class="w-16 h-16 text-base-content/30 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <h3 class="text-xl font-bold mb-2">No Items Yet</h3>
+          <p class="text-base-content/70 mb-4">Start by creating your first item</p>
+          <button class="btn btn-primary" onclick="createNewContentItem()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Create First Item
+          </button>
+        </div>
+      ` : `
+        <div class="grid gap-3">
+          ${contentItems.map(item => renderContentItemCard(item)).join('')}
+        </div>
+      `}
+    `;
+  }
+
+  function renderContentItemCard(item) {
+    const previewField = currentModel.fields.find(f => f.type === 'text' || f.type === 'textarea');
+    const preview = previewField ? (item[previewField.name] || '') : '';
+    const truncatedPreview = preview.length > 100 ? preview.substring(0, 100) + '...' : preview;
+
+    return `
+      <div class="card bg-base-100 shadow hover:shadow-lg transition-shadow">
+        <div class="card-body p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0" onclick="editContentItem(${item.id})">
+              <div class="font-semibold text-base sm:text-lg mb-1 cursor-pointer hover:text-primary truncate">
+                ${escapeHtml(preview || 'Untitled')}
+              </div>
+              ${truncatedPreview && truncatedPreview !== preview ? `
+                <p class="text-sm text-base-content/70 line-clamp-2">${escapeHtml(truncatedPreview)}</p>
+              ` : ''}
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+              <button class="btn btn-ghost btn-sm btn-square" onclick="editContentItem(${item.id})" title="Edit">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </button>
+              <button class="btn btn-ghost btn-sm btn-square text-error" onclick="deleteContentItem(${item.id})" title="Delete">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function createNewContentItem() {
+    currentContentItem = {};
+    contentView = 'edit';
+    renderContentEditView(false);
+  }
+
+  function editContentItem(id) {
+    currentContentItem = contentItems.find(item => item.id === id);
+    if (!currentContentItem) return;
+    contentView = 'edit';
+    renderContentEditView(false);
+  }
+
+  async function deleteContentItem(id) {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+
+    try {
+      const response = await fetch(`/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Failed to delete item');
+
+      await showContentListView();
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+      alert('Failed to delete item. Please try again.');
+    }
+  }
+
+  function renderContentEditView(isSingleton) {
+    const area = document.getElementById('content-management-area');
+    const isNew = !currentContentItem || !currentContentItem.id;
+
+    const backAction = isSingleton ? 'exitContentManagement' : 'showContentListView';
+
+    area.innerHTML = `
+      <div class="mb-4">
+        <button class="btn btn-ghost btn-sm gap-2" onclick="${backAction}()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Back
+        </button>
+      </div>
+
+      <form id="content-edit-form" onsubmit="saveContentItem(event)" class="space-y-4">
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body p-4 sm:p-6">
+            <h2 class="card-title text-xl sm:text-2xl mb-4">
+              ${isSingleton ? escapeHtml(currentModel.name) : (isNew ? 'New Item' : 'Edit Item')}
+            </h2>
+
+            <div class="space-y-4">
+              ${currentModel.fields.map(field => renderFormField(field)).join('')}
+            </div>
+
+            <div class="card-actions justify-end mt-6 pt-4 border-t gap-2">
+              <button type="button" class="btn btn-ghost" onclick="${backAction}()">Cancel</button>
+              <button type="submit" class="btn btn-primary">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    `;
+  }
+
+  function renderFormField(field) {
+    const value = currentContentItem[field.name] || '';
+    const label = field.label || field.name;
+    const required = field.required ? 'required' : '';
+    const requiredMark = field.required ? '<span class="text-error">*</span>' : '';
+
+    switch (field.type) {
+      case 'text':
+        return `
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">${escapeHtml(label)} ${requiredMark}</span>
+              ${field.maxLength ? `<span class="label-text-alt text-base-content/50">${field.maxLength} max</span>` : ''}
+            </label>
+            <input type="text" name="${field.name}" value="${escapeHtml(value)}"
+              ${field.maxLength ? `maxlength="${field.maxLength}"` : ''}
+              class="input input-bordered w-full" ${required} />
+          </div>
+        `;
+      case 'textarea':
+        return `
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">${escapeHtml(label)} ${requiredMark}</span>
+              ${field.maxLength ? `<span class="label-text-alt text-base-content/50">${field.maxLength} max</span>` : ''}
+            </label>
+            <textarea name="${field.name}" rows="4"
+              ${field.maxLength ? `maxlength="${field.maxLength}"` : ''}
+              class="textarea textarea-bordered w-full" ${required}>${escapeHtml(value)}</textarea>
+          </div>
+        `;
+      case 'markdown':
+        return `
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">${escapeHtml(label)} ${requiredMark}</span>
+              <span class="label-text-alt text-base-content/50">Markdown supported</span>
+            </label>
+            <textarea name="${field.name}" rows="8"
+              class="textarea textarea-bordered w-full font-mono text-sm" ${required}>${escapeHtml(value)}</textarea>
+          </div>
+        `;
+      case 'image':
+        return `
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">${escapeHtml(label)} ${requiredMark}</span>
+            </label>
+            <input type="text" name="${field.name}" value="${escapeHtml(value)}"
+              placeholder="Image filename" class="input input-bordered w-full" ${required} />
+            <label class="label">
+              <span class="label-text-alt text-base-content/50">Upload via Media Library tab</span>
+            </label>
+          </div>
+        `;
+      case 'date':
+        return `
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">${escapeHtml(label)} ${requiredMark}</span>
+            </label>
+            <input type="date" name="${field.name}" value="${escapeHtml(value)}"
+              class="input input-bordered w-full" ${required} />
+          </div>
+        `;
+      case 'link':
+        const linkValue = typeof value === 'object' ? value : { url: '', text: '' };
+        return `
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">${escapeHtml(label)} ${requiredMark}</span>
+            </label>
+            <div class="space-y-2">
+              <input type="url" name="${field.name}_url" value="${escapeHtml(linkValue.url || '')}"
+                placeholder="URL" class="input input-bordered w-full" ${required} />
+              <input type="text" name="${field.name}_text" value="${escapeHtml(linkValue.text || '')}"
+                placeholder="Link text (optional)" class="input input-bordered w-full" />
+            </div>
+          </div>
+        `;
+      case 'badges':
+        const badges = Array.isArray(value) ? value : [];
+        return `
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">${escapeHtml(label)} ${requiredMark}</span>
+              <span class="label-text-alt text-base-content/50">One per line</span>
+            </label>
+            <textarea name="${field.name}" rows="3"
+              class="textarea textarea-bordered w-full"
+              placeholder="badge1&#10;badge2&#10;badge3" ${required}>${badges.join('\n')}</textarea>
+          </div>
+        `;
+      default:
+        return `<div class="text-error">Unknown field type: ${field.type}</div>`;
+    }
+  }
+
+  async function saveContentItem(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const data = {};
+
+    currentModel.fields.forEach(field => {
+      if (field.type === 'link') {
+        data[field.name] = {
+          url: formData.get(`${field.name}_url`) || '',
+          text: formData.get(`${field.name}_text`) || ''
+        };
+      } else if (field.type === 'badges') {
+        const text = formData.get(field.name) || '';
+        data[field.name] = text.split('\n').map(s => s.trim()).filter(s => s);
+      } else {
+        data[field.name] = formData.get(field.name) || '';
+      }
+    });
+
+    try {
+      const isSingleton = currentModel.type === 'singleton';
+      const isEdit = currentContentItem.id !== undefined;
+
+      let endpoint, method;
+      if (isSingleton) {
+        endpoint = `/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/singleton`;
+        method = 'PUT';
+      } else if (isEdit) {
+        endpoint = `/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}/${currentContentItem.id}`;
+        method = 'PUT';
+      } else {
+        endpoint = `/api/admin/tenants/${TENANT_SLUG}/content/${currentModel.slug}`;
+        method = 'POST';
+      }
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) throw new Error('Failed to save content');
+
+      if (isSingleton) {
+        exitContentManagement();
+      } else {
+        await showContentListView();
+      }
+    } catch (error) {
+      console.error('Failed to save content:', error);
+      alert('Failed to save content. Please try again.');
+    }
   }
 
   async function loadContentItems() {
