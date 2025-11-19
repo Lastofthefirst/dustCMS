@@ -5,9 +5,10 @@
   "main": "src/main.ts",
   "type": "module",
   "scripts": {
+    "start": "bun run src/main.ts",
     "dev": "bun run --hot src/main.ts",
-    "build": "./build.sh",
     "setup": "bun run src/main.ts setup",
+    "build": "./build.sh",
     "test": "bun test tests/unit tests/integration && playwright test",
     "test:unit": "bun test tests/unit",
     "test:integration": "bun test tests/integration",
